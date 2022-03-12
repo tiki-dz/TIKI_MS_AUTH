@@ -1,6 +1,5 @@
-
 module.exports = (sequelize, DataTypes) =>{
-const Cinema=sequelize.define('Cinema', {
+  const Cinema=sequelize.define('Cinema', {
     idCinema: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
@@ -16,5 +15,5 @@ const Cinema=sequelize.define('Cinema', {
     Cinema.belongsTo(models.Partner, {foreignKey: 'idPartner', as: 'Partner'});
     console.log('Cinema belongs to partner!');
   }; 
-  
+  return Cinema;
 }

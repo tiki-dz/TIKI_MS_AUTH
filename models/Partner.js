@@ -39,5 +39,5 @@ module.exports = (sequelize, DataTypes) =>{
   partner.hasOne(models.Theatre)
   partner.hasOne(models.Other)
   }; 
-  
+  return partner;
 }

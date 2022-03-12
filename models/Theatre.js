@@ -20,4 +20,5 @@ module.exports = (sequelize, DataTypes) =>{
     Theatre.belongsTo(models.Partner, {foreignKey: 'idPartner', as: 'Partner'});
     console.log('Stadium belongs to partner!');
   };
+  return Theatre;
 }

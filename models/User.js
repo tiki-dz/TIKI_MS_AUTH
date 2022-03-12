@@ -65,5 +65,6 @@ module.exports = (sequelize, DataTypes) =>{
   user.hasOne(models.Partner)
   };
 
+  return user;
   
 }
