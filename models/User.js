@@ -1,8 +1,17 @@
-module.exports = (sequelize, DataTypes) =>
-  sequelize.define('User', {
-    Account_email: {
-        type: DataTypes.STRING(30),
-        allowNull: false
+const {Account} = require("./Account")
+const {Administrator} = require("./Administrator")
+const {Client} = require("./Client")
+const {Partner} = require("./Partner")
+
+module.exports = (sequelize, DataTypes) =>{
+  const user= sequelize.define('User', {
+    idUser: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+       primaryKey: true
+    },
+    email:{
+      type: DataTypes.STRING(30),
     },
     firstName: {
       type: DataTypes.STRING(45),
@@ -47,3 +56,14 @@ module.exports = (sequelize, DataTypes) =>
       },
    
   })
+
+  user.associate = (models) => {
+    user.belongsTo(models.Partner, {foreignKey: 'email', as: 'Account'});
+    console.log('user belongs to account has client and partner and admin!');
+    user.hasOne(models.Client)
+    user.hasOne(models.Administrator)
+  user.hasOne(models.Partner)
+  };
+
+  
+}

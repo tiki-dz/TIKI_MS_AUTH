@@ -1,3 +1,4 @@
+const { sequelize } = require('./models')
 var createError = require("http-errors");
 var express = require("express");
 var path = require("path");
@@ -23,7 +24,7 @@ app.use("/", indexRouter);
 app.use("/users", usersRouter);
 
 // catch 404 and forward to error handler
-
+sequelize.sync({ alter: true });
+console.log("tables created");
 var server = app.listen(5001);
 
-module.exports = app;

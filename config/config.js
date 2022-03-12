@@ -1,13 +1,17 @@
 
-const { Sequelize } = require('sequelize');
+module.exports = {
+  db: {
+    database: 'tiki',
+    user: 'admintiki@tiki',
+    password:  'TIKITA3NAtest12',
+    dialect:'mysql',
+    host: 'http://tiki.mysql.database.azure.com',
+    port:3306
 
-  const sequelize = new Sequelize("tiki", "admintiki@tiki", "TIKITA3NAtest12.", {
-    dialect: "mysql",
-    host: "http://tiki.mysql.database.azure.com"
-});
-  try {
-    await sequelize.authenticate();
-    console.log('Sequelize a connecté à la base de données MySQL!');
-  } catch (error) { 
-    console.error('Impossible de se connecter, erreur suivante :', error);
   }
+
+}
+
+
+  
+
