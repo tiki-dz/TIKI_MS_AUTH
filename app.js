@@ -28,3 +28,4 @@ sequelize.sync({ alter: true });
 console.log("tables created");
 var server = app.listen(5001);
 
+module.exports = app;
