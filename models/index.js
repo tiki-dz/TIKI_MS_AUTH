@@ -34,7 +34,14 @@ fs.readdirSync(__dirname)
   const model = require(x)(sequelize, Sequelize.DataTypes)
   console.log(model)
   db[model.name] = model
-})
+});
+const CLASSMETHODS = 'classMethods';
+const ASSOCIATE = 'associate';
+Object.keys(db).forEach(function (modelName) {
+  if (CLASSMETHODS in db[modelName].options) {
+   if (ASSOCIATE in db[modelName].options[CLASSMETHODS]) {
+    db[modelName].options.classMethods.associate(db);
+  }}});
  
 // Associations
 db.sequelize=sequelize;

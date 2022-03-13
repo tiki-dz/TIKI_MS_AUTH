@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
-const { User }  = require("../models")
+
 const {Model} = require('sequelize');
+
 function hashPassword (account, options) {
   const saltRounds = 8
 
@@ -31,12 +32,17 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     hooks: {
       beforeUpdate: hashPassword
-    }
+    },
+    classMethods:{
+      associate:function(models){
+        acc.hasOne(models.User);
+        console.log('Account has one User!');
+        }}
   })
-  acc.associate = (models) => {
-    account.hasOne(models.Users);
-    console.log('Account has one User!');
-  }; 
+  // acc.hasOne(Model.User);
+
+ 
+  
   // aclc.prototype.comparePassword = function (password) {
   //   return bcrypt.compare(password, this.password)
   // }

@@ -7,25 +7,31 @@ module.exports = (sequelize, DataTypes) =>{
       autoIncrement: true,
      primaryKey: true
     },
-    idPatner: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: 'Partners',
-        key: 'idPartner',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'SET NULL',
+    // idPatner: {
+    //   type: DataTypes.INTEGER,
+    //   references: {
+    //     model: 'Partners',
+    //     key: 'idPartner',
+    //   },
+    //   onUpdate: 'CASCADE',
+    //   onDelete: 'SET NULL',
 
-      allowNull: true
-    },
+    //   allowNull: true
+    // },
     capacity: {
       type: DataTypes.INTEGER,
       allowNull: false
     },
-  })
+  },{
+    classMethods:{
+      associate:function(models){
+        Stadium.belongsTo(models.Partner)
+        console.log('Stadium has one Partner!');
+    }
+  }
+})
   // Stadium.associate = (models) => {
-  //   Stadium.belongsTo(models.Partners)
-  //       console.log('Stadium has one Partner!');
+
   // }; 
 
   return Stadium;

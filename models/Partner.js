@@ -9,17 +9,17 @@ module.exports = (sequelize, DataTypes) =>{
       autoIncrement: true,
      primaryKey: true
     },
-    idUser: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: 'Users',
-        key: 'idUser',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'SET NULL',
-      allowNull:true
+    // idUser: {
+    //   type: DataTypes.INTEGER,
+    //   references: {
+    //     model: 'Users',
+    //     key: 'idUser',
+    //   },
+    //   onUpdate: 'CASCADE',
+    //   onDelete: 'SET NULL',
+    //   allowNull:true
 
-    },
+    // },
     orgaName:{
       type: DataTypes.STRING(45),
       allowNull: false
@@ -36,15 +36,21 @@ module.exports = (sequelize, DataTypes) =>{
       type: DataTypes.STRING,
       allowNull: false
     }
-  })
+  },{
+    classMethods:{
+      associate:function(models){
+        partner.belongsTo(models.User, {foreignKey: 'idUser', as: 'User',constraints: false});
+        console.log('Partner: user, cinema stadium theatre other!');
+        partner.hasOne(models.Stadium)
+       partner.hasOne(models.Cinema)
+      partner.hasOne(models.Theatre)
+      partner.hasOne(models.Other)
+    }
+  }
+})
 
   // partner.associate = (models) => {
-  //   partner.belongsTo(models.Users, {foreignKey: 'idUser', as: 'User',constraints: false});
-  //   console.log('Partner: user, cinema stadium theatre other!');
-  //   partner.hasOne(models.Stadia)
-  //  partner.hasOne(models.Cinemas)
-  // partner.hasOne(models.Theatres)
-  // partner.hasOne(models.Others)
+  
   // }; 
   return partner;
 }

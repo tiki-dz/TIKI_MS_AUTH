@@ -1,4 +1,4 @@
-const {Account} = require("./Account")
+
 const {Administrator} = require("./Administrator")
 const {Client} = require("./Client")
 
@@ -9,16 +9,7 @@ module.exports = (sequelize, DataTypes) =>{
         autoIncrement: true,
        primaryKey: true
     },
-    email:{
-      type: DataTypes.STRING(30),
-      references: {
-        model: 'Accounts',
-        key: 'email',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'SET NULL',
-      allowNull:true
-    },
+
     firstName: {
       type: DataTypes.STRING(45),
       allowNull: false
@@ -59,11 +50,22 @@ module.exports = (sequelize, DataTypes) =>{
         allowNull: false
       },
    
-  })
-  // user.associate = (models) => {
-  //   models.User.belongsTo(models.Account);
-  //   console.log('Account has one User!');
-  // }; 
+  },{
+    classMethods:{
+      associate:function(models){
+        user.belongsTo(models.Account,{
+          foreignKey: 'email',
+          as: 'Email'
+        });
+        user.hasOne(models.Administrator);
+        user.hasOne(models.Client);
+        user.hasOne(models.Partner);
+        
+        console.log('Account has one User!');  
+        }
+    }
+})
+  
 
  
   return user

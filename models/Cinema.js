@@ -5,21 +5,27 @@ module.exports = (sequelize, DataTypes) =>{
       autoIncrement: true,
      primaryKey: true
     },
-    idPartner: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: 'Partners',
-        key: 'idPartner',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'SET NULL',
-      allowNull: true
+    // idPartner: {
+    //   type: DataTypes.INTEGER,
+    //   references: {
+    //     model: 'Partners',
+    //     key: 'idPartner',
+    //   },
+    //   onUpdate: 'CASCADE',
+    //   onDelete: 'SET NULL',
+    //   allowNull: true
+    // }
+  },{
+    classMethods:{
+      associate:function(models){
+        Cinema.belongsTo(models.Partner, {foreignKey: 'idPartner', as: 'Partner',constraints: false});
+        console.log('Cinema belongs to partner!');
     }
-  })
+  }
+})
 
   // Cinema.associate = (models) => {
-  //   Cinema.belongsTo(models.Partners, {foreignKey: 'idPartner', as: 'Partner',constraints: false});
-  //   console.log('Cinema belongs to partner!');
+  
   // }; 
   return Cinema;
 }
