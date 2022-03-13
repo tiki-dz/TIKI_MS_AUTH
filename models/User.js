@@ -55,7 +55,7 @@ module.exports = (sequelize, DataTypes) =>{
       associate:function(models){
         user.belongsTo(models.Account,{
           foreignKey: 'email',
-          as: 'Email'
+          as: 'Accouunt'
         });
         user.hasOne(models.Administrator);
         user.hasOne(models.Client);
