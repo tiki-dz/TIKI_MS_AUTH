@@ -29,7 +29,7 @@ app.use("/users", usersRouter);
 
 sequelize.query('SET FOREIGN_KEY_CHECKS = 0')
 .then(function(){
-    return sequelize.sync({ force: true });
+    return sequelize.sync();
 })
 
 var server = app.listen(5001);
