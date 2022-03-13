@@ -1,7 +1,6 @@
 const {Account} = require("./Account")
 const {Administrator} = require("./Administrator")
 const {Client} = require("./Client")
-const {Partner} = require("./Partner")
 
 module.exports = (sequelize, DataTypes) =>{
   const user= sequelize.define('User', {
@@ -12,6 +11,13 @@ module.exports = (sequelize, DataTypes) =>{
     },
     email:{
       type: DataTypes.STRING(30),
+      references: {
+        model: 'Accounts',
+        key: 'email',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'SET NULL',
+      allowNull:true
     },
     firstName: {
       type: DataTypes.STRING(45),
@@ -28,9 +34,7 @@ module.exports = (sequelize, DataTypes) =>{
       type: DataTypes.INTEGER(10),
       allowNull: false,
       validate :{
-        validate: {
-            len: [10, 10]
-          }
+            len: [10, 10]  
       }
     },
     notificationToken: {
@@ -56,15 +60,11 @@ module.exports = (sequelize, DataTypes) =>{
       },
    
   })
+  // user.associate = (models) => {
+  //   models.User.belongsTo(models.Account);
+  //   console.log('Account has one User!');
+  // }; 
 
-  user.associate = (models) => {
-    user.belongsTo(models.Partner, {foreignKey: 'email', as: 'Account'});
-    console.log('user belongs to account has client and partner and admin!');
-    user.hasOne(models.Client)
-    user.hasOne(models.Administrator)
-  user.hasOne(models.Partner)
-  };
-
-  return user;
-  
+ 
+  return user
 }

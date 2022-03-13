@@ -34,7 +34,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   })
   acc.associate = (models) => {
-    account.hasOne(models.User, {foreignKey: 'idUser', as: 'User'});
+    account.hasOne(models.Users);
     console.log('Account has one User!');
   }; 
   // aclc.prototype.comparePassword = function (password) {

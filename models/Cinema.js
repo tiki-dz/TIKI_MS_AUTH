@@ -7,13 +7,19 @@ module.exports = (sequelize, DataTypes) =>{
     },
     idPartner: {
       type: DataTypes.INTEGER,
-      allowNull: false
+      references: {
+        model: 'Partners',
+        key: 'idPartner',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'SET NULL',
+      allowNull: true
     }
   })
 
-  Cinema.associate = (models) => {
-    Cinema.belongsTo(models.Partner, {foreignKey: 'idPartner', as: 'Partner'});
-    console.log('Cinema belongs to partner!');
-  }; 
+  // Cinema.associate = (models) => {
+  //   Cinema.belongsTo(models.Partners, {foreignKey: 'idPartner', as: 'Partner',constraints: false});
+  //   console.log('Cinema belongs to partner!');
+  // }; 
   return Cinema;
 }

@@ -2,12 +2,13 @@ const { Sequelize } = require('sequelize');
 const config = require('../config/config');
 const fs = require('fs')
 const path = require('path');
-const Administrator = require('./Administrator');
+
 
   const sequelize = new Sequelize(config.db.database, config.db.user, config.db.password, {
     dialect: config.db.dialect,
     host: config.db.host,
-    port:config.db.port
+    port:config.db.port,
+    logging: true,
 });
 try {
      sequelize.authenticate();
@@ -15,10 +16,14 @@ try {
   } catch (error) { 
     console.error('Impossible de se connecter, erreur :', error);
   }
-// Associations
+
   
 db={}
-dl=["Account","Administrator","Cinema","Client","Other","Partner","Stadium","Theatre","User"]
+// dl=["Account","Administrator","Cinema","Client","Other","Partner","Stadium","Theatre","User"]
+// var pa=require(path.join(__dirname, "Account.js"))(sequelize, Sequelize.DataTypes);
+// db[pa.name]=pa;
+// pa=require(path.join(__dirname, "User.js"))(sequelize, Sequelize.DataTypes);
+// db[pa.name]=pa;
 fs.readdirSync(__dirname)
 .filter((file) =>
   file !== 'index.js'
@@ -30,6 +35,36 @@ fs.readdirSync(__dirname)
   console.log(model)
   db[model.name] = model
 })
+ 
+// Associations
 db.sequelize=sequelize;
 db.Sequelize=Sequelize;
 module.exports=db;
+
+
+//
+// const {Administrator} = require('../models/Administrator');
+// const {User} = require('../models/User');
+// const {Client} = require('../models/Client');
+// const {Cinema} = require('../models/Cinema');
+// const {Theatre} = require('../models/Theatre');
+// const {Partner} = require('../models/Partner');
+// const {Stadium} = require('../models/Stadium');
+// const {Account} = require('../models/Account');
+//  Admin.belongsTo(User);
+//  console.log('Associate admin!');
+
+//  Client.belongsTo(User);
+//  console.log('Client belongs to user!');
+
+//  Cinema.belongsTo(Partner);
+//  console.log('Cinema belongs to partner!');
+
+//  Partner.belongsTo(User, {foreignKey: 'idUser', as: 'User',constraints: false});
+
+//  Stadium.belongsTo(Partner);
+//  console.log('Stadium belongs to partner!');
+
+//  Theatre.belongsTo(Partner);
+//  console.log('Stadium belongs to partner!');
+// console.log("tables created");

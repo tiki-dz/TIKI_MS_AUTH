@@ -4,14 +4,21 @@ const {User} = require("./User")
 
 module.exports = (sequelize, DataTypes) =>{
   const partner=sequelize.define('Partner', {
-    idPatner: {
+    idPartner: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
      primaryKey: true
     },
     idUser: {
       type: DataTypes.INTEGER,
-      allowNull: false
+      references: {
+        model: 'Users',
+        key: 'idUser',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'SET NULL',
+      allowNull:true
+
     },
     orgaName:{
       type: DataTypes.STRING(45),
@@ -31,13 +38,13 @@ module.exports = (sequelize, DataTypes) =>{
     }
   })
 
-  partner.associate = (models) => {
-    partner.belongsTo(models.User, {foreignKey: 'idUser', as: 'User'});
-    console.log('Partner: user, cinema stadium theatre other!');
-    partner.hasOne(models.Stadium)
-   partner.hasOne(models.Cinema)
-  partner.hasOne(models.Theatre)
-  partner.hasOne(models.Other)
-  }; 
+  // partner.associate = (models) => {
+  //   partner.belongsTo(models.Users, {foreignKey: 'idUser', as: 'User',constraints: false});
+  //   console.log('Partner: user, cinema stadium theatre other!');
+  //   partner.hasOne(models.Stadia)
+  //  partner.hasOne(models.Cinemas)
+  // partner.hasOne(models.Theatres)
+  // partner.hasOne(models.Others)
+  // }; 
   return partner;
 }

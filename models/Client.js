@@ -9,12 +9,19 @@ module.exports = (sequelize, DataTypes) =>{
       },
     idUser: {
       type: DataTypes.INTEGER,
-      allowNull: false
+      references: {
+        model: 'Users',
+        key: 'idUser',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'SET NULL',
+      allowNull:true
+
     },
   })
-  client.associate = (models) => {
-    client.belongsTo(models.User, {foreignKey: 'idUser', as: 'User'});
-    console.log('Client belongs to user!');
-  }; 
+  // client.associate = (models) => {
+  //   client.belongsTo(models.Users, {foreignKey: 'idUser', as: 'User',constraints: false});
+  //   console.log('Client belongs to User!');
+  // };
   return client;
 }

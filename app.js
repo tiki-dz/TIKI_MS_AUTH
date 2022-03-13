@@ -7,6 +7,8 @@ var logger = require("morgan");
 
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
+const Account = require('./models/Account');
+const User = require('./models/User');
 
 var app = express();
 
@@ -24,8 +26,12 @@ app.use("/", indexRouter);
 app.use("/users", usersRouter);
 
 // catch 404 and forward to error handler
-sequelize.sync({ alter: true });
-console.log("tables created");
+
+sequelize.query('SET FOREIGN_KEY_CHECKS = 0')
+.then(function(){
+    return sequelize.sync({ force: true });
+})
+
 var server = app.listen(5001);
 
 module.exports = app;

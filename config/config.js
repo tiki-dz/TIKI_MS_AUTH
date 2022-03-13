@@ -6,7 +6,7 @@ module.exports = {
     password:  'TIKITA3NAtest12.',
     dialect:'mysql',
     host: 'tiki.mysql.database.azure.com',
-    port:3306
+    port:3306,
 
   }
 
