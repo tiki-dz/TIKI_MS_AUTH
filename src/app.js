@@ -1,9 +1,9 @@
-const { sequelize } = require("./models");
-var createError = require("http-errors");
-var express = require("express");
-var path = require("path");
-var cookieParser = require("cookie-parser");
-var logger = require("morgan");
+const { sequelize } = require('./models')
+var createError = require("http-errors")
+var express = require("express")
+var path = require("path")
+var cookieParser = require("cookie-parser")
+var logger = require("morgan")
 
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
@@ -24,7 +24,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/api", indexRouter);
 // catch 404 and forward to error handler
-sequelize.query("SET FOREIGN_KEY_CHECKS = 0").then(function () {
+sequelize.query("SET FOREIGN_KEY_CHECKS = 0").then(function() {
   return sequelize.sync({ force: true });
 });
 

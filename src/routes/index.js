@@ -6,7 +6,6 @@ var partnerRoutes = require("./partner");
 var adminRoutes = require("./admin");
 
 router.use("/client", clientRoutes);
-
 router.use("/partner", partnerRoutes);
 router.use("/administrator", adminRoutes);
 
