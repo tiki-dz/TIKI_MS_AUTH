@@ -1,6 +1,6 @@
-const {Stadium} = require("./Stadium")
-const {Theatre} = require("./Theatre")
-const {User} = require("./User")
+// const {Stadium} = require("./Stadium")
+// const {Theatre} = require("./Theatre")
+// const {User} = require("./User")
 
 module.exports = (sequelize, DataTypes) =>{
   const partner=sequelize.define('Partner', {

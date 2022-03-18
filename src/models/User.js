@@ -1,6 +1,5 @@
-
-const {Administrator} = require("./Administrator")
-const {Client} = require("./Client")
+// const {Administrator} = require("./Administrator")
+// const {Client} = require("./Client")
 
 module.exports = (sequelize, DataTypes) =>{
   const user= sequelize.define('User', {

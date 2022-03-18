@@ -1,6 +1,7 @@
+/* eslint-disable node/handle-callback-err */
 const bcrypt = require("bcrypt");
 
-const { Model } = require("sequelize");
+// const { Model } = require("sequelize");
 
 function hashPassword(account, options) {
   const saltRounds = 8;

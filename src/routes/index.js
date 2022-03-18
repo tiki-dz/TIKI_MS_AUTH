@@ -1,9 +1,9 @@
-var express = require("express");
-var router = express.Router();
+const express = require("express");
+const router = express.Router();
 
-var clientRoutes = require("./client");
-var partnerRoutes = require("./partner");
-var adminRoutes = require("./admin");
+const clientRoutes = require("./client");
+const partnerRoutes = require("./partner");
+const adminRoutes = require("./admin");
 
 router.use("/client", clientRoutes);
 router.use("/partner", partnerRoutes);
