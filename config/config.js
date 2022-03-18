@@ -1,10 +1,10 @@
 module.exports = {
   db: {
-    database: "projet",
-    user: "root",
-    password: "12345678",
+    database: "tiki",
+    user: "admintiki@tiki",
+    password: "TIKITA3NAtest12.",
     dialect: "mysql",
-    host: "localhost",
+    host: "tiki.mysql.database.azure.com",
     port: 3306,
   },
 };
