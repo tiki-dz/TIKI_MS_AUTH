@@ -1,11 +1,12 @@
-// const {Partner} = require("./Partner")
+// eslint-disable-next-line no-unused-vars
+const { Partner } = require('./Partner')
 
-module.exports = (sequelize, DataTypes) =>{
-  const Theatre= sequelize.define('Theatre', {
+module.exports = (sequelize, DataTypes) => {
+  const Theatre = sequelize.define('Theatre', {
     idTheatre: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
-     primaryKey: true
+      primaryKey: true
     },
     // idPartner: {
     //   type: DataTypes.INTEGER,
@@ -21,18 +22,18 @@ module.exports = (sequelize, DataTypes) =>{
     capacity: {
       type: DataTypes.INTEGER,
       allowNull: false
-    },
-  },{
-    classMethods:{
-      associate:function(models){
-        Theatre.belongsTo(models.Partner)
-        console.log('Theatre has one Partner!');
     }
-  }
-})
+  }, {
+    classMethods: {
+      associate: function (models) {
+        Theatre.belongsTo(models.Partner)
+        console.log('Theatre has one Partner!')
+      }
+    }
+  })
   // Theatre.associate = (models) => {
-  //  
-  // }; 
+  //
+  // };
 
-  return Theatre;
+  return Theatre
 }

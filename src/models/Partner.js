@@ -1,13 +1,16 @@
-// const {Stadium} = require("./Stadium")
-// const {Theatre} = require("./Theatre")
-// const {User} = require("./User")
+// eslint-disable-next-line no-unused-vars
+const { Stadium } = require('./Stadium')
+// eslint-disable-next-line no-unused-vars
+const { Theatre } = require('./Theatre')
+// eslint-disable-next-line no-unused-vars
+const { User } = require('./User')
 
-module.exports = (sequelize, DataTypes) =>{
-  const partner=sequelize.define('Partner', {
+module.exports = (sequelize, DataTypes) => {
+  const partner = sequelize.define('Partner', {
     idPartner: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
-     primaryKey: true
+      primaryKey: true
     },
     // idUser: {
     //   type: DataTypes.INTEGER,
@@ -20,37 +23,37 @@ module.exports = (sequelize, DataTypes) =>{
     //   allowNull:true
 
     // },
-    orgaName:{
+    orgaName: {
       type: DataTypes.STRING(45),
       allowNull: false
     },
-    orgaDesc:{
+    orgaDesc: {
       type: DataTypes.STRING,
       allowNull: false
     },
-    orgaType:{
+    orgaType: {
       type: DataTypes.STRING,
       allowNull: false
     },
-    orgaAddress:{
+    orgaAddress: {
       type: DataTypes.STRING,
       allowNull: false
     }
-  },{
-    classMethods:{
-      associate:function(models){
-        partner.belongsTo(models.User, {foreignKey: 'idUser', as: 'User',constraints: false});
-        console.log('Partner: user, cinema stadium theatre other!');
+  }, {
+    classMethods: {
+      associate: function (models) {
+        partner.belongsTo(models.User, { foreignKey: 'idUser', as: 'User', constraints: false })
+        console.log('Partner: user, cinema stadium theatre other!')
         partner.hasOne(models.Stadium)
-       partner.hasOne(models.Cinema)
-      partner.hasOne(models.Theatre)
-      partner.hasOne(models.Other)
+        partner.hasOne(models.Cinema)
+        partner.hasOne(models.Theatre)
+        partner.hasOne(models.Other)
+      }
     }
-  }
-})
+  })
 
   // partner.associate = (models) => {
-  
-  // }; 
-  return partner;
+
+  // };
+  return partner
 }

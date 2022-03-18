@@ -6,13 +6,14 @@ module.exports = {
   },
   extends: [
     'plugin:vue/essential',
-    'standard',
-    'prettier'
+    'standard'
   ],
   parserOptions: {
     ecmaVersion: 12
   },
-  plugins: ['prettier'],
+  plugins: [
+    'vue'
+  ],
   rules: {
   }
 }

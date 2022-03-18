@@ -1,12 +1,14 @@
-// const {Administrator} = require("./Administrator")
-// const {Client} = require("./Client")
+// eslint-disable-next-line no-unused-vars
+const { Administrator } = require('./Administrator')
+// eslint-disable-next-line no-unused-vars
+const { Client } = require('./Client')
 
-module.exports = (sequelize, DataTypes) =>{
-  const user= sequelize.define('User', {
+module.exports = (sequelize, DataTypes) => {
+  const user = sequelize.define('User', {
     idUser: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-       primaryKey: true
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true
     },
 
     firstName: {
@@ -18,24 +20,24 @@ module.exports = (sequelize, DataTypes) =>{
       allowNull: false
     },
     city: {
-        type: DataTypes.STRING(45)
-      },
+      type: DataTypes.STRING(45)
+    },
     phoneNumber: {
       type: DataTypes.INTEGER(10),
       allowNull: false,
-      validate :{
-            len: [10, 10]  
+      validate: {
+        len: [10, 10]
       }
     },
     notificationToken: {
-        type: DataTypes.STRING(45),    
-      },
+      type: DataTypes.STRING(45)
+    },
     profilePicture: {
-        type: DataTypes.STRING(45),
-        validate:{
-            isUrl: true, 
-        }
-      },
+      type: DataTypes.STRING(45),
+      validate: {
+        isUrl: true
+      }
+    },
     sexe: {
       type: DataTypes.INTEGER(1),
       allowNull: false
@@ -45,27 +47,25 @@ module.exports = (sequelize, DataTypes) =>{
       allowNull: false
     },
     birthDate: {
-        type: DataTypes.DATEONLY,
-        allowNull: false
-      },
-   
-  },{
-    classMethods:{
-      associate:function(models){
-        user.belongsTo(models.Account,{
+      type: DataTypes.DATEONLY,
+      allowNull: false
+    }
+
+  }, {
+    classMethods: {
+      associate: function (models) {
+        user.belongsTo(models.Account, {
           foreignKey: 'email',
           as: 'Accouunt'
-        });
-        user.hasOne(models.Administrator);
-        user.hasOne(models.Client);
-        user.hasOne(models.Partner);
-        
-        console.log('Account has one User!');  
-        }
-    }
-})
-  
+        })
+        user.hasOne(models.Administrator)
+        user.hasOne(models.Client)
+        user.hasOne(models.Partner)
 
- 
+        console.log('Account has one User!')
+      }
+    }
+  })
+
   return user
 }

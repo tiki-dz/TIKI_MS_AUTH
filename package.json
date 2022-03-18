@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "nodemon src/app.js --exec  \"npm run lint && node\"",
-    "lint": "eslint src/**/*.js --fix"
+    "lint": "eslint src/**/*.js"
   },
   "dependencies": {
     "bcrypt": "^5.0.1",

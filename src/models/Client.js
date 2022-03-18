@@ -1,14 +1,15 @@
-// const { User } = require("./User");
+// eslint-disable-next-line no-unused-vars
+const { User } = require('./User')
 
 module.exports = (sequelize, DataTypes) => {
   const client = sequelize.define(
-    "Client",
+    'Client',
     {
       idClient: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
-        primaryKey: true,
-      },
+        primaryKey: true
+      }
       // idUser: {
       //   type: DataTypes.INTEGER,
       //   references: {
@@ -25,17 +26,17 @@ module.exports = (sequelize, DataTypes) => {
       classMethods: {
         associate: function (models) {
           client.belongsTo(models.User, {
-            foreignKey: "idUser",
-            as: "User",
-            constraints: false,
-          });
-          console.log("Client belongs to User!");
-        },
-      },
+            foreignKey: 'idUser',
+            as: 'User',
+            constraints: false
+          })
+          console.log('Client belongs to User!')
+        }
+      }
     }
-  );
+  )
   // client.associate = (models) => {
 
   // };
-  return client;
-};
+  return client
+}
