@@ -95,4 +95,21 @@ async function updateById (req, res) {
   }
 }
 
-module.exports = { login, signup, deleteById, updateById }
+async function updateimage (req, res) {
+  try {
+    console.log('start')
+    const img = req.file.buffer.toString('base64')
+    const user = await User.findOne({
+      where: {
+        idUser: req.params.id
+      }
+    })
+    user.profilePicture = img
+    user.save()
+    res.status(200).send('saved successfuly')
+  } catch (error) {
+    res.status(400).send(error)
+  }
+}
+
+module.exports = { login, signup, deleteById, updateById, updateimage }
