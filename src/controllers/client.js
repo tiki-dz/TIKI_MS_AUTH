@@ -73,4 +73,37 @@ async function add (req, res, next) {
   // if data is validated add in database;
 }
 
-module.exports = { login, signup, add }
+async function findAll (req, res) {
+  try {
+    const Clients = await User.findAll({
+      where: {
+        type: 'client'
+      },
+      limit: 50
+    })
+    return res.status(200).send(Clients)
+  } catch (error) {
+    res.status(400).send(error)
+  }
+}
+
+async function findById (req, res) {
+  try {
+    const id = parseInt(req.params.id)
+    const client = await Client.findOne({
+      where: {
+        idClient: id
+      }
+    })
+    const theFullClient = await User.findOne({
+      where: {
+        idUser: client.dataValues.idUser
+      }
+    })
+    return res.status(200).send(theFullClient)
+  } catch (error) {
+    res.status(400).send(error)
+  }
+}
+
+module.exports = { login, signup, add, findAll, findById }

@@ -12,13 +12,9 @@ router.get('/test', (req, rest) => {
 })
 // ************************************************************************************************
 // get all clients
-router.get('/', (req, rest) => {
-  // todo get all the client
-})
+router.get('/', clientController.findAll)
 // get client with id
-router.get('/:id', (req, rest) => {
-  // todo get client with id
-})
+router.get('/:id', clientController.findById)
 // adding new client
 router.post('/', validationClient.validate('add'), clientController.add)
 // deleting an client with id
