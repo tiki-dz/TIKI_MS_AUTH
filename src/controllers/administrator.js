@@ -80,7 +80,7 @@ async function findClientById (req, res) {
     })
     const theFullClient = await User.findOne({
       where: {
-        idUser: client.dataValues.idUser
+        idUser: client.dataValues.UserIdUser
       },
       include: [{ model: Client }]
     })
