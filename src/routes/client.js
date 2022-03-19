@@ -19,5 +19,7 @@ router.get('/:id', clientController.findById)
 router.post('/', validationClient.validate('add'), clientController.add)
 // deleting an client with id
 router.delete('/:id', clientController.deleteById)
+// updating an client with id
+router.put('/:id', validationClient.validate('updateUser'), clientController.updateById)
 
 module.exports = router

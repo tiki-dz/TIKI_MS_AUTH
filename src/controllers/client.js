@@ -51,7 +51,7 @@ async function add (req, res, next) {
               firstName: userToAdd.firstName,
               lastName: userToAdd.lastName,
               city: userToAdd.city,
-              type: 'Client',
+              type: 'client',
               phoneNumber: userToAdd.phoneNumber,
               sexe: userToAdd.sexe,
               birthDate: userToAdd.birthDate,
@@ -141,4 +141,42 @@ async function deleteById (req, res) {
   }
 }
 
-module.exports = { login, signup, add, findAll, findById, deleteById }
+async function updateById (req, res) {
+  // check id data is validated
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    res.status(422).json({ errors: errors.array() })
+    return
+  }
+  try {
+    const id = parseInt(req.params.id)
+    const data = req.body
+    const userId = await Client.findOne({
+      where: {
+        idClient: id
+      },
+      attributes: ['idUser']
+    })
+    console.log(userId)
+
+    const userToUpdate = await User.findOne({
+      where: {
+        idUser: userId.dataValues.idUser
+      }
+    })
+    userToUpdate.firstName = data.firstName
+    userToUpdate.lastName = data.lastName
+    userToUpdate.city = data.city
+    userToUpdate.type = 'client'
+    userToUpdate.phoneNumber = data.phoneNumber
+    userToUpdate.sexe = data.sexe
+    userToUpdate.birthDate = data.birthDate
+    await userToUpdate.save()
+    console.log(userToUpdate)
+    return res.status(200).send({ userUpdated: userToUpdate.toJSON() })
+  } catch (error) {
+    res.status(400).send(error)
+  }
+}
+
+module.exports = { login, signup, add, findAll, findById, deleteById, updateById }
