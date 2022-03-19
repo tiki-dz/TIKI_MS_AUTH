@@ -1,6 +1,6 @@
 require('dotenv').config()
 const { validationResult } = require('express-validator/check')
-const { Account, User } = require('../models')
+const { Account, User, Code } = require('../models')
 const fs = require('fs')
 const nodemailer = require('nodemailer')
 const ejs = require('ejs')
