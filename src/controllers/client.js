@@ -106,4 +106,39 @@ async function findById (req, res) {
   }
 }
 
-module.exports = { login, signup, add, findAll, findById }
+async function deleteById (req, res) {
+  try {
+    const id = parseInt(req.params.id)
+    console.log('deleting Client with id = ', id)
+    const client = await Client.findOne({
+      where: {
+        idClient: id
+      }
+    })
+    const user = await User.findOne({
+      where: {
+        idUser: client.dataValues.idUser
+      }
+    })
+    await Account.destroy({
+      where: {
+        email: user.dataValues.email
+      }
+    })
+    await User.destroy({
+      where: {
+        idUser: client.dataValues.idUser
+      }
+    })
+    await Client.destroy({
+      where: {
+        idClient: id
+      }
+    })
+    return res.status(200).send('deleting the user')
+  } catch (error) {
+    res.status(400).send(error)
+  }
+}
+
+module.exports = { login, signup, add, findAll, findById, deleteById }

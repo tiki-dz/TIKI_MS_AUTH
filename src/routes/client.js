@@ -18,8 +18,6 @@ router.get('/:id', clientController.findById)
 // adding new client
 router.post('/', validationClient.validate('add'), clientController.add)
 // deleting an client with id
-router.delete('/:id', (req, rest) => {
-  // deleting an client with id
-})
+router.delete('/:id', clientController.deleteById)
 
 module.exports = router
