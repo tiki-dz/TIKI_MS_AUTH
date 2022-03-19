@@ -1,6 +1,6 @@
 require('dotenv').config()
 const { validationResult } = require('express-validator/check')
-const { Account, User, Code } = require('../models')
+const { Account, User } = require('../models')
 const fs = require('fs')
 const nodemailer = require('nodemailer')
 const ejs = require('ejs')
@@ -9,39 +9,75 @@ const jwt = require('jsonwebtoken')
 function login (req, res, next) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
-    res.status(422).json({ errors: errors.array() })
+    return res.status(422).json({ errors: errors.array() })
   }
-  Account.findOne({
-    where: {
-      email: req.body.email
-    }
-  }).then(function (account) {
+  try {
+    Account.findOne({
+      where: {
+        email: req.body.email
+      },
+      attributes: ['email', 'password', 'state'],
+      include: [
+        { model: User, attributes: ['type', 'phoneNumber', 'sexe', 'profilePicture', 'lastName', 'firstName', 'AccountEmail', 'city'] }
+      ]
+    }).then(function (account) {
     // check the password
-    if (account === null) {
-      res.status(422).json({ errors: ['invalid credentials'] })
-    }
-    if (account.state === 0) {
-      res.status(422).json({ errors: ['invalid token'] })
-    }
-  })
+      console.log(account)
+      if (account === null) {
+        return res.status(404).json({ errors: ['account dont exist'] })
+      }
+      // eslint-disable-next-line node/handle-callback-err
+      bcrypt.compare(req.body.password, account.password, (err, data) => {
+        if (!data) {
+          return res.status(401).json({ errors: ['Invalid credentials'] })
+        }
+        if (account.User.type !== 'client') {
+          return res.status(401).json({ errors: ['Unauthorized'] })
+        }
+        if (account.state === 0) {
+          return res.status(403).json({ errors: ['your account is desactivated'] })
+        }
+        if (account.state === 2) {
+          res.status(403).json({ errors: ['your account is desactivated by admin'] })
+        }
+        const token = jwt.sign({ email: req.body.email }, process.env.JWT_AUTH_KEY, {
+          expiresIn: '30d'
+        })
+        // delete sensitive data
+        account.password = undefined
+        account.state = undefined
+        account.createdAt = undefined
+        account.updatedAt = undefined
+        return res.status(200).json({ token: token, data: account, success: true })
+      })
+    })
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      errors: [err]
+    })
+  }
 }
 function verifyCode (req, res, next) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
-    res.status(422).json({ errors: errors.array() })
+    return res.status(422).json({ errors: errors.array() })
   }
   try {
     const decodedToken = jwt.verify(req.headers['x-access-token'], process.env.JWT_NOTAUTH_KEY)
-    console.log(decodedToken)
     console.log(decodedToken.email === req.body.email)
     if (decodedToken.email === req.body.email && decodedToken.code.toString() === req.body.code.toString()) {
-      console.log('dkhalna hna')
       Account.findOne({
         where: {
           email: req.body.email
         }
       }).then(function (account) {
-        // Check if record exists in db
+        if (account.state === 2) {
+          return res.status(409).send({
+            errors: ['your account is desactivated by admin'],
+            success: false
+          })
+        }
         if (account) {
           account.update({
             state: 1
@@ -65,7 +101,10 @@ function verifyCode (req, res, next) {
       })
     }
   } catch (err) {
-    console.log(err)
+    return res.status(500).json({
+      success: false,
+      errors: [err]
+    })
   }
 }
 function signup (req, res, next) {
@@ -104,11 +143,12 @@ function signup (req, res, next) {
               })
             }
             User.create({
-              email: req.body.email,
+              AccountEmail: req.body.email,
               firstName: req.body.firstName,
               lastName: req.body.lastName,
               birthDate: req.body.birthDate,
               type: 'client',
+              city: req.body.city,
               sexe: req.body.sexe === 'Homme' ? 1 : 0,
               phoneNumber: req.body.phoneNumber
             }).then((user) => {
@@ -132,8 +172,11 @@ function signup (req, res, next) {
         })
       }
     })
-  } catch (e) {
-
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      errors: [err]
+    })
   }
 
   // if data is validated add in database;
@@ -144,7 +187,6 @@ function sendClientActivationEmail (email, code) {
     email: email,
     code: code
   })
-
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {

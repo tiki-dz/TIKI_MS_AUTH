@@ -16,8 +16,9 @@ router.post('/verifyCode',
 router.post('/login',
   validationClient.validate('login'),
   clientController.login
-
 )
-router.get('/test', (req, rest) => {})
+router.post('/resendVerfication', (req, rest) => {
+
+})
 
 module.exports = router

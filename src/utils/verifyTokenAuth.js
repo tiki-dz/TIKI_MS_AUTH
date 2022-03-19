@@ -13,6 +13,7 @@ const verifyToken = (req, res, next) => {
   }
   try {
     jwt.verify(token, config.JWT_AUTH_KEY)
+    
   } catch (err) {
     return res.status(401).send('Invalid Token')
   }
