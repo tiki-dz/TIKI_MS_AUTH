@@ -11,7 +11,7 @@ const verifyToken = (req, res, next) => {
     )
   }
   try {
-    const decodedToken = jwt.verify(token, config.JWT_AUTH_KEY)
+    const decodedToken = jwt.verify(token, config.JWT_AUTHADMIN_KEY)
     console.log(decodedToken.email)
     console.log('email')
     Account.findOne({
