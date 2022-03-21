@@ -26,17 +26,17 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER(10),
       allowNull: false,
       validate: {
-        len: [10, 10]
+        len: [9, 9]
       }
     },
     notificationToken: {
       type: DataTypes.STRING(45)
     },
     profilePicture: {
-      type: DataTypes.STRING(45),
-      validate: {
-        isUrl: true
-      }
+      type: DataTypes.TEXT()
+      // validate: {
+      //   isUrl: true
+      // }
     },
     sexe: {
       type: DataTypes.INTEGER(1),
