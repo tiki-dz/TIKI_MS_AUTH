@@ -26,7 +26,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER(10),
       allowNull: false,
       validate: {
-        len: [10, 10]
+        len: [9, 9]
       }
     },
     notificationToken: {
