@@ -1,5 +1,13 @@
 const express = require('express')
 const router = express.Router()
+const administratorController = require('../controllers/administrator')
+const validationAdministrator = require('../validation/administrator')
+
+// get all clients
+router.get('/client', administratorController.findAllClients)
+router.get('/client/:id', administratorController.findClientById)
+router.post('/client', validationAdministrator.validate('addClient'), administratorController.addClient)
+
 const adminController = require('../controllers/admin')
 const validationClient = require('../validation/client')
 const verifyToken = require('../utils/verifyTokenAuthAdmin')

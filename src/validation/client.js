@@ -24,6 +24,27 @@ exports.validate = (method) => {
         body('birthDate').isDate()
       ]
     };
+
+    // eslint-disable-next-line no-lone-blocks
+    case 'updateUser': {
+      return [
+        body('firstName')
+          .matches(/^[A-Za-z\s]+$/)
+          .withMessage('Name must be alphabetic.')
+          .isLength({ min: 3 }),
+        body('lastName')
+          .matches(/^[A-Za-z\s]+$/)
+          .withMessage('lastname must be alphabetic.')
+          .isLength({ min: 3 }),
+        body('city')
+          .matches(/^[A-Za-z\s]+$/)
+          .withMessage('city must be alphabetic.')
+          .isLength({ min: 3 }),
+        body('phoneNumber').isNumeric().isLength({ min: 9 }),
+        body('sexe').isIn([0, 1]),
+        body('birthDate').isDate()
+      ]
+    };
     case 'verifyCode': {
       return [
         body('email', 'Invalid email format').isEmail(),

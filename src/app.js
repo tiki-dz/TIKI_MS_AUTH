@@ -24,9 +24,16 @@ app.use(express.static(path.join(__dirname, 'public')))
 
 app.use('/api', indexRouter)
 
+// catch 404 and forward to error handler
+// sequelize.query('SET FOREIGN_KEY_CHECKS = 0').then(function () {
+//   sequelize.sync({ force: true })
+// })
+
+
 sequelize.query('SET FOREIGN_KEY_CHECKS = 0').then(function () {
   sequelize.sync({ force: false })
 })
+
 
 app.listen(5001)
 
