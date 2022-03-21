@@ -9,7 +9,8 @@ const jwt = require('jsonwebtoken')
 function login (req, res, next) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
-    return res.status(422).json({ errors: errors.array() })
+    return res.status(422).json(
+      { errors: errors.array(), success: false, message: 'invalid data' })
   }
   try {
     Account.findOne({
@@ -23,21 +24,41 @@ function login (req, res, next) {
     }).then(function (account) {
     // check the password
       if (account === null) {
-        return res.status(404).json({ errors: ['account dont exist'] })
+        return res.status(404).json({
+          success: false,
+          message: 'Account don"t exist',
+          errors: ['account d"ont exist']
+        })
       }
       // eslint-disable-next-line node/handle-callback-err
       bcrypt.compare(req.body.password, account.password, (err, data) => {
         if (!data) {
-          return res.status(401).json({ errors: ['Invalid credentials'] })
+          return res.status(401).json({
+            success: false,
+            message: 'invalid credentials',
+            errors: ['invalid credentials']
+          })
         }
         if (account.User.type !== 'client') {
-          return res.status(401).json({ errors: ['Unauthorized'] })
+          return res.status(401).json({
+            success: false,
+            message: 'not authorized',
+            errors: ['not authorized']
+          })
         }
         if (account.state === 0) {
-          return res.status(403).json({ errors: ['your account is desactivated'] })
+          return res.status(403).json({
+            success: false,
+            message: 'your account is not active',
+            errors: ['your account is not active']
+          })
         }
         if (account.state === 2) {
-          res.status(403).json({ errors: ['your account is desactivated by admin'] })
+          return res.status(403).json({
+            success: false,
+            message: 'your account is desactivated by admin',
+            errors: ['your account is desactivated by admin']
+          })
         }
         const token = jwt.sign({ email: req.body.email }, process.env.JWT_AUTH_KEY, {
           expiresIn: '30d'
@@ -46,7 +67,14 @@ function login (req, res, next) {
         account.password = undefined
         account.createdAt = undefined
         account.updatedAt = undefined
-        return res.status(200).json({ token: token, data: account, success: true })
+        return res.status(200).send({
+          message: 'success',
+          data: {
+            token: token,
+            account: account
+          },
+          success: true
+        })
       })
     })
   } catch (err) {
@@ -59,16 +87,19 @@ function login (req, res, next) {
 function verifyCode (req, res, next) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
-    return res.status(422).json({ errors: errors.array() })
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
   }
   try {
     const decodedToken = jwt.verify(req.headers['x-access-token'], process.env.JWT_NOTAUTH_KEY)
     // eslint-disable-next-line node/handle-callback-err
     bcrypt.compare(req.body.code, decodedToken.code, (err, data) => {
-      if (!data) {
-        return res.status(401).json({ errors: ['Invalid credentials'] })
+      if (!data || decodedToken.email !== req.body.email) {
+        return res.status(401).json({
+          success: false,
+          message: 'invalid credentials',
+          errors: ['Invalid credentials']
+        })
       }
-      console.log(data)
       if (decodedToken.email === req.body.email) {
         Account.findOne({
           where: {
@@ -77,6 +108,7 @@ function verifyCode (req, res, next) {
         }).then(function (account) {
           if (account.state === 2) {
             return res.status(409).send({
+              message: 'your account is desativated by admin',
               errors: ['your account is desactivated by admin'],
               success: false
             })
@@ -90,7 +122,7 @@ function verifyCode (req, res, next) {
                   expiresIn: '30d'
                 })
                 res.status(200).send({
-                  token: Authtoken,
+                  data: { token: Authtoken },
                   success: true,
                   message: 'User authenficated succefully'
                 })
@@ -107,6 +139,7 @@ function verifyCode (req, res, next) {
   } catch (err) {
     return res.status(500).json({
       success: false,
+      message: 'error',
       errors: [err]
     })
   }
@@ -115,7 +148,7 @@ function signup (req, res, next) {
   // check id data is validated
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
-    res.status(422).json({ errors: errors.array() })
+    res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
     return
   }
   try {
@@ -126,12 +159,16 @@ function signup (req, res, next) {
     }).then(function (account) {
       if (account != null) {
         return res.status(409).json({
+          success: false,
+          message: 'Account already exist',
           errors: ['account already exist']
         })
       } else {
         bcrypt.hash(req.body.password, 10, function (err, hash) {
           if (err) {
             return res.status(500).json({
+              success: false,
+              message: 'Hash error',
               errors: ['internal server error']
             })
           }
@@ -140,12 +177,6 @@ function signup (req, res, next) {
             password: hash,
             state: 0
           }).then((account, err) => {
-            if (err) {
-              Account.destroy({ where: { email: req.body.email } })
-              return res.status(500).json({
-                errors: ['internal server error']
-              })
-            }
             User.create({
               AccountEmail: req.body.email,
               firstName: req.body.firstName,
@@ -157,19 +188,16 @@ function signup (req, res, next) {
               phoneNumber: req.body.phoneNumber
             }).then((user) => {
               const codeSended = Math.round(Math.random() * (999999 - 100000) + 100000)
+              // eslint-disable-next-line node/handle-callback-err
               bcrypt.hash(codeSended.toString(), 10, function (err, hash) {
-                if (err) {
-                  console.log(err)
-                  return res.status(500).json({
-                    errors: ['internal server error']
-                  })
-                }
                 const token = jwt.sign({ email: req.body.email, code: hash }, process.env.JWT_NOTAUTH_KEY, {
-                  expiresIn: 1200
+                  expiresIn: 60
                 })
                 sendClientActivationEmail(req.body.email, codeSended)
                 return res.status(200).json({
-                  token: token,
+                  data: {
+                    token: token
+                  },
                   success: true,
                   message: 'User created successfuly Please check your email to activate your account'
                 })
@@ -181,6 +209,7 @@ function signup (req, res, next) {
     })
   } catch (err) {
     return res.status(500).json({
+      message: 'internal server error',
       success: false,
       errors: [err]
     })
@@ -216,7 +245,7 @@ function sendClientActivationEmail (email, code) {
 function profile (req, res) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
-    return res.status(422).json({ errors: errors.array() })
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
   }
   try {
     const token = req.headers['x-access-token']
@@ -225,13 +254,14 @@ function profile (req, res) {
       where: {
         AccountEmail: decodedToken.email
       },
-      attributes: ['firstName', 'lastName', 'city', 'phoneNumber', 'sexe', 'birthDate', 'AccountEmail']
+      attributes: ['firstName', 'profilePicture', 'lastName', 'city', 'phoneNumber', 'sexe', 'birthDate', 'AccountEmail']
     }).then(function (user) {
-      return res.status(200).json({ data: user, success: true })
+      return res.status(200).json({ data: user, success: true, message: 'success' })
     })
   } catch (err) {
     return res.status(500).json({
       success: false,
+      message: 'error',
       errors: [err]
     })
   }
@@ -254,36 +284,63 @@ function resendVerficationCode (req, res) {
     // check the password
       console.log(account)
       if (account === null) {
-        return res.status(404).json({ errors: ['account dont exist'] })
+        return res.status(404).json({
+          message: 'account dont exist',
+          success: false,
+          errors: ['account dont exist']
+        })
       }
       // eslint-disable-next-line node/handle-callback-err
       bcrypt.compare(req.body.password, account.password, (err, data) => {
         if (!data) {
-          return res.status(401).json({ errors: ['Invalid credentials'] })
+          return res.status(401).json({
+            message: 'Invalid credentials',
+            success: false,
+            errors: ['Invalid credentials']
+          })
         }
         if (account.User.type !== 'client') {
-          return res.status(401).json({ errors: ['Unauthorized'] })
+          return res.status(401).json({
+            message: 'Unauthorized',
+            success: false,
+            errors: ['Unauthorized']
+          })
         }
         if (account.state === 1) {
-          return res.status(200).json({ errors: ['your account is already activated'] })
+          return res.status(200).json({
+            message: 'your account is already activated',
+            success: false,
+            errors: ['your account is already activated']
+          })
         }
         if (account.state === 2) {
-          res.status(403).json({ errors: ['your account is desactivated by admin'] })
+          return res.status(403).json({
+            message: 'your account is desactivated by admin',
+            success: false,
+            errors: ['your account is desactivated by admin']
+          })
         }
         const codeSended = Math.round(Math.random() * (999999 - 100000) + 100000)
         bcrypt.hash(codeSended.toString(), 10, function (err, hash) {
           if (err) {
             console.log(err)
             return res.status(500).json({
+              message: 'internal server error',
               success: false,
               errors: ['internal server error']
             })
           }
           const token = jwt.sign({ email: req.body.email, code: hash }, process.env.JWT_NOTAUTH_KEY, {
-            expiresIn: 1200
+            expiresIn: 60
           })
           sendClientActivationEmail(req.body.email, codeSended)
-          return res.status(200).json({ token: token, message: 'code resended successfully' })
+          return res.status(200).json({
+            data: {
+              token: token
+            },
+            success: true,
+            message: 'code resended successfully'
+          })
         })
       })
     })

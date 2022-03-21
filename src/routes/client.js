@@ -4,7 +4,6 @@ const clientController = require('../controllers/client')
 const validationClient = require('../validation/client')
 const verifyToken = require('../utils/verifyToken')
 const verifyTokenAuth = require('../utils/verifyTokenAuth')
-
 router.post('/signup',
   validationClient.validate('signup'),
   clientController.signup
