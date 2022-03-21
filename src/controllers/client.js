@@ -1,12 +1,6 @@
 require('dotenv').config()
 const { validationResult } = require('express-validator/check')
-const { User } = require('../models')
-const { Account } = require('../models')
-const { Client } = require('../models')
-function login (req, res, next) {}
-
-
-const { Account, User } = require('../models')
+const { Client, Account, User } = require('../models')
 const fs = require('fs')
 const nodemailer = require('nodemailer')
 const ejs = require('ejs')
@@ -449,4 +443,4 @@ function resendVerficationCode (req, res) {
     })
   }
 }
-module.exports = { login, signup, verifyCode, profile, resendVerficationCode,deleteById,updateimage}
+module.exports = { login, signup, verifyCode, profile, resendVerficationCode, updateById, deleteById, updateimage }

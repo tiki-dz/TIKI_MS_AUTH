@@ -36,5 +36,4 @@ router.post('/login',
 )
 router.get('/profile', verifyTokenAuth, clientController.profile)
 router.post('/resendVerfication', validationClient.validate('login'), clientController.resendVerficationCode)
-
 module.exports = router
