@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "nodemon src/app.js --exec  \"npm run lint && node\"",
+    "start": "node ./bin/www",
     "lint": "eslint src/**/*.js"
   },
   "dependencies": {
