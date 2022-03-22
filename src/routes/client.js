@@ -12,6 +12,7 @@ router.post('/signup',
   validationClient.validate('signup'),
   clientController.signup
 )
+router.post('/Password/Verify', clientController.passwordVerify)
 
 router.get('/test', (req, rest) => {
   rest.send('test')

@@ -90,4 +90,75 @@ async function findClientById (req, res) {
   }
 }
 
-module.exports = { addClient, findAllClients, findClientById }
+async function activateClient (req, res) {
+  try {
+    const id = parseInt(req.params.id)
+    const client = await Client.findOne({
+      where: {
+        idClient: id
+      }
+    })
+    const user = await User.findOne({
+      where: {
+        idUser: client.dataValues.UserIdUser
+      }
+    })
+    const account = await Account.findOne({
+      where: {
+        email: user.dataValues.AccountEmail
+      }
+    })
+    let message = 'Account activated successfuly'
+    if (account.state !== 1) {
+      account.state = 1
+      await account.save()
+    } else {
+      message = 'already activated user!'
+    }
+
+    return res.status(200).json({
+      success: true,
+      body: account,
+      message: message
+    })
+  } catch (error) {
+    res.status(400).send(error)
+  }
+}
+async function deactivateClient (req, res) {
+  try {
+    const id = parseInt(req.params.id)
+    const client = await Client.findOne({
+      where: {
+        idClient: id
+      }
+    })
+    const user = await User.findOne({
+      where: {
+        idUser: client.dataValues.UserIdUser
+      }
+    })
+    const account = await Account.findOne({
+      where: {
+        email: user.dataValues.AccountEmail
+      }
+    })
+    let message = 'Account Deactivated successfuly'
+    if (account.state !== 2) {
+      account.state = 2
+      await account.save()
+    } else {
+      message = 'already deactivated user!'
+    }
+
+    return res.status(200).json({
+      success: true,
+      body: account,
+      message: message
+    })
+  } catch (error) {
+    res.status(400).send(error)
+  }
+}
+
+module.exports = { addClient, findAllClients, findClientById, deactivateClient, activateClient }

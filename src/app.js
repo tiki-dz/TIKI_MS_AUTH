@@ -29,11 +29,9 @@ app.use('/api', indexRouter)
 //   sequelize.sync({ force: true })
 // })
 
-
 sequelize.query('SET FOREIGN_KEY_CHECKS = 0').then(function () {
   sequelize.sync({ force: false })
 })
-
 
 app.listen(5001)
 
