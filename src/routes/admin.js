@@ -6,8 +6,8 @@ const validationAdministrator = require('../validation/administrator')
 // get all clients
 router.get('/client', administratorController.findAllClients)
 router.get('/client/:id', administratorController.findClientById)
-router.get('/client/:id/activate', administratorController.activateClient)
-router.get('/client/:id/deactivate', administratorController.deactivateClient)
+router.put('/client/:id/activate', validationAdministrator.validate('activate'), administratorController.activateClient)
+router.put('/client/:id/deactivate', validationAdministrator.validate('deactivate'), administratorController.deactivateClient)
 
 router.post('/client', validationAdministrator.validate('addClient'), administratorController.addClient)
 

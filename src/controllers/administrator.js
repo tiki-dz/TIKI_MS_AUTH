@@ -91,7 +91,10 @@ async function findClientById (req, res) {
 }
 
 async function activateClient (req, res) {
-  try {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array() })
+  } try {
     const id = parseInt(req.params.id)
     const client = await Client.findOne({
       where: {
@@ -110,15 +113,15 @@ async function activateClient (req, res) {
     })
     let message = 'Account activated successfuly'
     if (account.state !== 1) {
-      account.state = 1
-      await account.save()
+      account.update({
+        state: req.body.state
+      })
     } else {
       message = 'already activated user!'
     }
 
     return res.status(200).json({
       success: true,
-      body: account,
       message: message
     })
   } catch (error) {
@@ -126,7 +129,10 @@ async function activateClient (req, res) {
   }
 }
 async function deactivateClient (req, res) {
-  try {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array() })
+  } try {
     const id = parseInt(req.params.id)
     const client = await Client.findOne({
       where: {
@@ -145,19 +151,23 @@ async function deactivateClient (req, res) {
     })
     let message = 'Account Deactivated successfuly'
     if (account.state !== 2) {
-      account.state = 2
-      await account.save()
+      account.update({
+        state: req.body.state
+      })
     } else {
       message = 'already deactivated user!'
     }
 
     return res.status(200).json({
       success: true,
-      body: account,
       message: message
     })
   } catch (error) {
-    res.status(400).send(error)
+    return res.status(400).json({
+      success: false,
+      message: 'error',
+      errors: [error]
+    })
   }
 }
 
