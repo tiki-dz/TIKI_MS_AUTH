@@ -3,15 +3,12 @@ const { validationResult } = require('express-validator/check')
 const { User } = require('../models')
 const { Account } = require('../models')
 const { Client } = require('../models')
-function login (req, res, next) {}
-
-
-const { Account, User } = require('../models')
 const fs = require('fs')
 const nodemailer = require('nodemailer')
 const ejs = require('ejs')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+
 function login (req, res, next) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
@@ -222,98 +219,6 @@ function signup (req, res, next) {
   }
   // if data is validated add in database;
 }
-
-// ****************************************************************************************************
-
-async function deleteById (req, res) {
-  try {
-    const id = parseInt(req.params.id)
-    console.log('deleting Client with id = ', id)
-    const client = await Client.findOne({
-      where: {
-        idClient: id
-      }
-    })
-    const user = await User.findOne({
-      where: {
-        idUser: client.dataValues.idUser
-      }
-    })
-    await Account.destroy({
-      where: {
-        email: user.dataValues.email
-      }
-    })
-    await User.destroy({
-      where: {
-        idUser: client.dataValues.idUser
-      }
-    })
-    await Client.destroy({
-      where: {
-        idClient: id
-      }
-    })
-    return res.status(200).send('deleting the user')
-  } catch (error) {
-    res.status(400).send(error)
-  }
-}
-
-async function updateById (req, res) {
-  // check id data is validated
-  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
-  if (!errors.isEmpty()) {
-    res.status(422).json({ errors: errors.array() })
-    return
-  }
-  try {
-    const id = parseInt(req.params.id)
-    const data = req.body
-    const userId = await Client.findOne({
-      where: {
-        idClient: id
-      },
-      attributes: ['idUser']
-    })
-    console.log(userId)
-
-    const userToUpdate = await User.findOne({
-      where: {
-        idUser: userId.dataValues.idUser
-      }
-    })
-    userToUpdate.firstName = data.firstName
-    userToUpdate.lastName = data.lastName
-    userToUpdate.city = data.city
-    userToUpdate.type = 'client'
-    userToUpdate.phoneNumber = data.phoneNumber
-    userToUpdate.sexe = data.sexe
-    userToUpdate.birthDate = data.birthDate
-    await userToUpdate.save()
-    console.log(userToUpdate)
-    return res.status(200).send({ userUpdated: userToUpdate.toJSON() })
-  } catch (error) {
-    res.status(400).send(error)
-  }
-}
-
-async function updateimage (req, res) {
-  try {
-    console.log('start')
-    const img = req.file.buffer.toString('base64')
-    const user = await User.findOne({
-      where: {
-        idUser: req.params.id
-      }
-    })
-    user.profilePicture = img
-    user.save()
-    res.status(200).send('saved successfuly')
-  } catch (error) {
-    res.status(400).send(error)
-  }
-}
 function sendClientActivationEmail (email, code) {
   const template = fs.readFileSync('views/template/mail/verify.ejs').toString()
   const html = ejs.render(template, {
@@ -449,4 +354,97 @@ function resendVerficationCode (req, res) {
     })
   }
 }
-module.exports = { login, signup, verifyCode, profile, resendVerficationCode,deleteById,updateimage}
+
+// ****************************************************************************************************
+// deleting an client with id
+async function deleteById (req, res) {
+  try {
+    const id = parseInt(req.params.id)
+    console.log('deleting Client with id = ', id)
+    const client = await Client.findOne({
+      where: {
+        idClient: id
+      }
+    })
+    const user = await User.findOne({
+      where: {
+        idUser: client.dataValues.idUser
+      }
+    })
+    await Account.destroy({
+      where: {
+        email: user.dataValues.email
+      }
+    })
+    await User.destroy({
+      where: {
+        idUser: client.dataValues.idUser
+      }
+    })
+    await Client.destroy({
+      where: {
+        idClient: id
+      }
+    })
+    return res.status(200).send('deleting the user')
+  } catch (error) {
+    res.status(400).send(error)
+  }
+}
+// updating an client with id
+async function updateById (req, res) {
+  // check id data is validated
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    res.status(422).json({ errors: errors.array() })
+    return
+  }
+  try {
+    const id = parseInt(req.params.id)
+    const data = req.body
+    const userId = await Client.findOne({
+      where: {
+        idClient: id
+      },
+      attributes: ['idUser']
+    })
+    console.log(userId)
+
+    const userToUpdate = await User.findOne({
+      where: {
+        idUser: userId.dataValues.idUser
+      }
+    })
+    userToUpdate.firstName = data.firstName
+    userToUpdate.lastName = data.lastName
+    userToUpdate.city = data.city
+    userToUpdate.type = 'client'
+    userToUpdate.phoneNumber = data.phoneNumber
+    userToUpdate.sexe = data.sexe
+    userToUpdate.birthDate = data.birthDate
+    await userToUpdate.save()
+    console.log(userToUpdate)
+    return res.status(200).send({ userUpdated: userToUpdate.toJSON() })
+  } catch (error) {
+    res.status(400).send(error)
+  }
+}
+// updating profil image client with id
+async function updateimage (req, res) {
+  try {
+    console.log('start')
+    const img = req.file.buffer.toString('base64')
+    const user = await User.findOne({
+      where: {
+        idUser: req.params.id
+      }
+    })
+    user.profilePicture = img
+    user.save()
+    res.status(200).send('saved successfuly')
+  } catch (error) {
+    res.status(400).send(error)
+  }
+}
+
+module.exports = { login, signup, verifyCode, profile, resendVerficationCode, deleteById, updateimage, updateById, sendClientActivationEmail }

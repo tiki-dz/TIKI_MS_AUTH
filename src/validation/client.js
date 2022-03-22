@@ -24,7 +24,6 @@ exports.validate = (method) => {
         body('birthDate').isDate()
       ]
     };
-
     // eslint-disable-next-line no-lone-blocks
     case 'updateUser': {
       return [
