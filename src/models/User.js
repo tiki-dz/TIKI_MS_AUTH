@@ -61,7 +61,6 @@ module.exports = (sequelize, DataTypes) => {
         user.hasOne(models.Administrator)
         user.hasOne(models.Client)
         user.hasOne(models.Partner)
-
         console.log('Account has one User!')
       }
     }

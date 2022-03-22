@@ -3,8 +3,10 @@ const router = express.Router()
 const adminController = require('../controllers/admin')
 const validationClient = require('../validation/client')
 const verifyToken = require('../utils/verifyTokenAuthAdmin')
+const verifyTokenAuthSuperAdmin = require('../utils/verifyTokenAuthSuperAdmin')
 router.post('/signup',
   validationClient.validate('signup'),
+  verifyTokenAuthSuperAdmin,
   adminController.signup
 )
 router.post('/login',

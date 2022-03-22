@@ -1,6 +1,6 @@
 require('dotenv').config()
 const { validationResult } = require('express-validator/check')
-const { Account, User } = require('../models')
+const { Account, User, Partner, Other, Stadium, Cinema, Theatre } = require('../models')
 const fs = require('fs')
 const nodemailer = require('nodemailer')
 const ejs = require('ejs')
@@ -20,7 +20,7 @@ function login (req, res, next) {
       },
       attributes: ['email', 'password', 'state'],
       include: [
-        { model: User, attributes: ['type', 'phoneNumber', 'sexe', 'profilePicture', 'lastName', 'firstName', 'AccountEmail', 'city'] }
+        { model: User, attributes: ['type', 'idUser', 'phoneNumber', 'sexe', 'profilePicture', 'lastName', 'firstName', 'AccountEmail', 'city'] }
       ]
     }).then(function (account) {
     // check the password
@@ -40,7 +40,7 @@ function login (req, res, next) {
             errors: ['invalid credentials']
           })
         }
-        if (account.User.type !== 'client') {
+        if (account.User.type !== 'partner') {
           return res.status(401).json({
             success: false,
             message: 'not authorized',
@@ -61,20 +61,25 @@ function login (req, res, next) {
             errors: ['your account is desactivated by admin']
           })
         }
-        const token = jwt.sign({ email: req.body.email }, process.env.JWT_AUTH_KEY, {
+        const token = jwt.sign({ email: req.body.email }, process.env.JWT_AUTHPARTNER_KEY, {
           expiresIn: '30d'
         })
         // delete sensitive data
         account.password = undefined
         account.createdAt = undefined
         account.updatedAt = undefined
-        return res.status(200).send({
-          message: 'success',
-          data: {
-            token: token,
-            account: account
-          },
-          success: true
+        Partner.findOne({
+          UserIdUser: account.User.idUser
+        }).then((partner) => {
+          return res.status(200).send({
+            message: 'success',
+            data: {
+              token: token,
+              account: account,
+              partner: partner
+            },
+            success: true
+          })
         })
       })
     })
@@ -91,7 +96,7 @@ function verifyCode (req, res, next) {
     return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
   }
   try {
-    const decodedToken = jwt.verify(req.headers['x-access-token'], process.env.JWT_NOTAUTH_KEY)
+    const decodedToken = jwt.verify(req.headers['x-access-token'], process.env.JWT_NOTAUTHPARTNER_KEY)
     // eslint-disable-next-line node/handle-callback-err
     bcrypt.compare(req.body.code, decodedToken.code, (err, data) => {
       if (!data || decodedToken.email !== req.body.email) {
@@ -119,7 +124,7 @@ function verifyCode (req, res, next) {
               state: 1
             })
               .then(function (account) {
-                const Authtoken = jwt.sign({ email: req.body.email }, process.env.JWT_AUTH_KEY, {
+                const Authtoken = jwt.sign({ email: req.body.email }, process.env.JWT_AUTHPARTNER_KEY, {
                   expiresIn: '30d'
                 })
                 res.status(200).send({
@@ -183,24 +188,52 @@ function signup (req, res, next) {
               firstName: req.body.firstName,
               lastName: req.body.lastName,
               birthDate: req.body.birthDate,
-              type: 'client',
+              type: 'partner',
               city: req.body.city,
               sexe: req.body.sexe === 'Homme' ? 1 : 0,
               phoneNumber: req.body.phoneNumber
             }).then((user) => {
-              const codeSended = Math.round(Math.random() * (999999 - 100000) + 100000)
-              // eslint-disable-next-line node/handle-callback-err
-              bcrypt.hash(codeSended.toString(), 10, function (err, hash) {
-                const token = jwt.sign({ email: req.body.email, code: hash }, process.env.JWT_NOTAUTH_KEY, {
-                  expiresIn: 60
-                })
-                sendClientActivationEmail(req.body.email, codeSended)
-                return res.status(200).json({
-                  data: {
-                    token: token
-                  },
-                  success: true,
-                  message: 'User created successfuly Please check your email to activate your account'
+              Partner.create({
+                type: req.body.type,
+                orgaName: req.body.orgaName,
+                orgaDesc: req.body.orgaDesc,
+                orgaType: req.body.orgaType,
+                orgaAddress: req.body.orgaAddress
+              }).then((partner) => {
+                if (partner.orgaType === 'Other') {
+                  Other.create({
+                    PartnerIdPartner: partner.idPartner
+                  })
+                } else if (partner.orgaType === 'Stadium') {
+                  Stadium.create({
+                    PartnerIdPartner: partner.idPartner,
+                    capacity: req.body.capacity
+                  })
+                } else if (partner.orgaType === 'Cinema') {
+                  Cinema.create({
+                    PartnerIdPartner: partner.idPartner,
+                    capacity: req.body.capacity
+                  })
+                } else if (partner.orgaType === 'Theatre') {
+                  Theatre.create({
+                    PartnerIdPartner: partner.idPartner,
+                    capacity: req.body.capacity
+                  })
+                }
+                const codeSended = Math.round(Math.random() * (999999 - 100000) + 100000)
+                // eslint-disable-next-line node/handle-callback-err
+                bcrypt.hash(codeSended.toString(), 10, function (err, hash) {
+                  const token = jwt.sign({ email: req.body.email, code: hash }, process.env.JWT_NOTAUTHPARTNER_KEY, {
+                    expiresIn: 60
+                  })
+                  sendClientActivationEmail(req.body.email, codeSended)
+                  return res.status(200).json({
+                    data: {
+                      token: token
+                    },
+                    success: true,
+                    message: 'Partner created successfuly Please check your email to activate your account'
+                  })
                 })
               })
             })
@@ -250,14 +283,25 @@ function profile (req, res) {
   }
   try {
     const token = req.headers['x-access-token']
-    const decodedToken = jwt.verify(token, process.env.JWT_AUTH_KEY)
+    const decodedToken = jwt.verify(token, process.env.JWT_AUTHPARTNER_KEY)
     User.findOne({
       where: {
         AccountEmail: decodedToken.email
       },
       attributes: ['firstName', 'profilePicture', 'lastName', 'city', 'phoneNumber', 'sexe', 'birthDate', 'AccountEmail']
     }).then(function (user) {
-      return res.status(200).json({ data: user, success: true, message: 'success' })
+      Partner.findOne({
+        UserIdUser: user.idUser
+      }).then((partner) => {
+        return res.status(200).send({
+          message: 'success',
+          data: {
+            account: user,
+            partner: partner
+          },
+          success: true
+        })
+      })
     })
   } catch (err) {
     return res.status(500).json({
@@ -335,7 +379,7 @@ function resendVerficationCode (req, res) {
               errors: ['internal server error']
             })
           }
-          const token = jwt.sign({ email: req.body.email, code: hash }, process.env.JWT_NOTAUTH_KEY, {
+          const token = jwt.sign({ email: req.body.email, code: hash }, process.env.JWT_NOTAUTHPARTNER_KEY, {
             expiresIn: 60
           })
           sendClientActivationEmail(req.body.email, codeSended)
