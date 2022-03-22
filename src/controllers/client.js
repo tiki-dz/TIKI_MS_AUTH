@@ -443,4 +443,50 @@ function resendVerficationCode (req, res) {
     })
   }
 }
-module.exports = { login, signup, verifyCode, profile, resendVerficationCode, updateById, deleteById, updateimage }
+
+function forgotPassword (req, res, next) {
+  // check id data is validated
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  try {
+    Account.findOne({
+      where: {
+        email: req.body.email
+      }
+    }).then(function (account) {
+      if (account == null) {
+        return res.status(409).json({
+          success: false,
+          message: 'This user does not exist try to creat account',
+          errors: ['This user does not exist try to creat account']
+        })
+      } else {
+        const codeSended = Math.round(Math.random() * (999999 - 100000) + 100000)
+        // eslint-disable-next-line node/handle-callback-err
+        bcrypt.hash(codeSended.toString(), 10, function (err, hash) {
+          const token = jwt.sign({ email: req.body.email, code: hash }, process.env.JWT_NOTAUTH_KEY, {
+            expiresIn: 60
+          })
+          sendClientActivationEmail(req.body.email, codeSended)
+          return res.status(200).json({
+            data: {
+              token: token
+            },
+            success: true,
+            message: 'Code sent successfuly Please check your email to activate your account'
+          })
+        })
+      }
+    })
+  } catch (err) {
+    return res.status(500).json({
+      message: 'internal server error',
+      success: false,
+      errors: [err]
+    })
+  }
+}
+
+module.exports = { login, signup, verifyCode, profile, resendVerficationCode, updateById, deleteById, updateimage, forgotPassword }

@@ -148,7 +148,7 @@ async function deactivateClient (req, res) {
       account.state = 2
       await account.save()
     } else {
-      message = 'already activated user!'
+      message = 'already deactivated user!'
     }
 
     return res.status(200).json({
