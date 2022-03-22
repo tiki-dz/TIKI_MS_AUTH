@@ -1,11 +1,15 @@
 require('dotenv').config()
 const { validationResult } = require('express-validator/check')
-const { Client, Account, User } = require('../models')
+const { User } = require('../models')
+const { Account } = require('../models')
+// const { Client } = require('../models')
 const fs = require('fs')
 const nodemailer = require('nodemailer')
 const ejs = require('ejs')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const config = process.env
+
 function login (req, res, next) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
@@ -216,98 +220,6 @@ function signup (req, res, next) {
   }
   // if data is validated add in database;
 }
-
-// ****************************************************************************************************
-
-async function deleteById (req, res) {
-  try {
-    const id = parseInt(req.params.id)
-    console.log('deleting Client with id = ', id)
-    const client = await Client.findOne({
-      where: {
-        idClient: id
-      }
-    })
-    const user = await User.findOne({
-      where: {
-        idUser: client.dataValues.idUser
-      }
-    })
-    await Account.destroy({
-      where: {
-        email: user.dataValues.email
-      }
-    })
-    await User.destroy({
-      where: {
-        idUser: client.dataValues.idUser
-      }
-    })
-    await Client.destroy({
-      where: {
-        idClient: id
-      }
-    })
-    return res.status(200).send('deleting the user')
-  } catch (error) {
-    res.status(400).send(error)
-  }
-}
-
-async function updateById (req, res) {
-  // check id data is validated
-  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
-  if (!errors.isEmpty()) {
-    res.status(422).json({ errors: errors.array() })
-    return
-  }
-  try {
-    const id = parseInt(req.params.id)
-    const data = req.body
-    const userId = await Client.findOne({
-      where: {
-        idClient: id
-      },
-      attributes: ['idUser']
-    })
-    console.log(userId)
-
-    const userToUpdate = await User.findOne({
-      where: {
-        idUser: userId.dataValues.idUser
-      }
-    })
-    userToUpdate.firstName = data.firstName
-    userToUpdate.lastName = data.lastName
-    userToUpdate.city = data.city
-    userToUpdate.type = 'client'
-    userToUpdate.phoneNumber = data.phoneNumber
-    userToUpdate.sexe = data.sexe
-    userToUpdate.birthDate = data.birthDate
-    await userToUpdate.save()
-    console.log(userToUpdate)
-    return res.status(200).send({ userUpdated: userToUpdate.toJSON() })
-  } catch (error) {
-    res.status(400).send(error)
-  }
-}
-
-async function updateimage (req, res) {
-  try {
-    console.log('start')
-    const img = req.file.buffer.toString('base64')
-    const user = await User.findOne({
-      where: {
-        idUser: req.params.id
-      }
-    })
-    user.profilePicture = img
-    user.save()
-    res.status(200).send('saved successfuly')
-  } catch (error) {
-    res.status(400).send(error)
-  }
-}
 function sendClientActivationEmail (email, code) {
   const template = fs.readFileSync('views/template/mail/verify.ejs').toString()
   const html = ejs.render(template, {
@@ -444,6 +356,103 @@ function resendVerficationCode (req, res) {
   }
 }
 
+// ****************************************************************************************************
+// deleting an client with id
+async function deleteById (req, res) {
+  // check id data is validated
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+
+  try {
+    const token = req.headers['x-access-token']
+    const decodedToken = jwt.verify(token, config.JWT_AUTH_KEY)
+    console.log('deleting Client with email = ', decodedToken.email)
+
+    const account = await Account.findOne({
+      where: {
+        email: decodedToken.email
+      }
+    })
+    account.state = 10
+    account.save()
+    return res.status(200).send('deleting the user')
+  } catch (error) {
+    res.status(400).send(error)
+  }
+}
+// updating an client with id
+async function updateById (req, res) {
+  // check the authentification token
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  // check id data is validated
+  const DATAerrors = validationResult(req) // Finds the validation DATAerrors in this request and wraps them in an object with handy functions
+  if (!DATAerrors.isEmpty()) {
+    res.status(422).json({ DATAerrors: DATAerrors.array() })
+    return
+  }
+  try {
+    const token = req.headers['x-access-token']
+    const decodedToken = jwt.verify(token, config.JWT_AUTH_KEY)
+    // const id = parseInt(req.params.id)
+    const data = req.body
+    // const userId = await Client.findOne({
+    //   where: {
+    //     idClient: decodedToken.email
+    //   },
+    //   attributes: ['idUser']
+    // })
+    // console.log(userId)
+
+    const userToUpdate = await User.findOne({
+      where: {
+        AccountEmail: decodedToken.email
+      }
+    })
+    userToUpdate.firstName = data.firstName
+    userToUpdate.lastName = data.lastName
+    userToUpdate.city = data.city
+    userToUpdate.type = 'client'
+    userToUpdate.phoneNumber = data.phoneNumber
+    userToUpdate.sexe = data.sexe === 'Homme' ? 1 : 0
+    userToUpdate.birthDate = data.birthDate
+    await userToUpdate.save()
+    console.log(userToUpdate)
+    return res.status(200).send({ userUpdated: userToUpdate.toJSON() })
+  } catch (error) {
+    res.status(400).send(error)
+  }
+}
+// updating profil image client with id
+async function updateimage (req, res) {
+  // check the authentification token
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+
+  try {
+    const token = req.headers['x-access-token']
+    const decodedToken = jwt.verify(token, config.JWT_AUTH_KEY)
+    const img = req.file.buffer.toString('base64')
+    const user = await User.findOne({
+      where: {
+        AccountEmail: decodedToken.email
+      }
+    })
+    user.profilePicture = img
+    user.save()
+    res.status(200).send('saved successfuly')
+  } catch (error) {
+    res.status(400).send(error)
+  }
+}
+
+// check the authentification token
 function passwordVerify (req, res, next) {
   // check id data is validated
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
@@ -489,4 +498,4 @@ function passwordVerify (req, res, next) {
   }
 }
 
-module.exports = { login, signup, verifyCode, profile, resendVerficationCode, updateById, deleteById, updateimage, passwordVerify }
+module.exports = { login, signup, verifyCode, profile, resendVerficationCode, deleteById, updateimage, updateById, sendClientActivationEmail, passwordVerify }

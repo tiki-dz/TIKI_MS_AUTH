@@ -6,7 +6,8 @@ const Promise = require('bluebird')
 const bcrypt = Promise.promisifyAll(require('bcrypt-nodejs'))
 const saltRounds = 8
 
-async function addClient (req, res, next) {
+// adding one client
+async function addClient (req, res) {
 // check id data is validated
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
@@ -35,7 +36,7 @@ async function addClient (req, res, next) {
               city: userToAdd.city,
               type: 'client',
               phoneNumber: userToAdd.phoneNumber,
-              sexe: userToAdd.sexe,
+              sexe: userToAdd.sexe === 'Homme' ? 1 : 0,
               birthDate: userToAdd.birthDate,
               AccountEmail: newAccount.dataValues.email
             })
@@ -54,7 +55,7 @@ async function addClient (req, res, next) {
 
 // if data is validated add in database;
 }
-
+// get all clients
 async function findAllClients (req, res) {
   try {
     const Clients = await User.findAll({
@@ -69,7 +70,7 @@ async function findAllClients (req, res) {
     res.status(400).send(error)
   }
 }
-
+// get one client by id
 async function findClientById (req, res) {
   try {
     const id = parseInt(req.params.id)

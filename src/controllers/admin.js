@@ -3,7 +3,8 @@ const { validationResult } = require('express-validator/check')
 const { Account, User } = require('../models')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-function login (req, res, next) {
+
+function login (req, res) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, message: 'invalid data', errors: errors.array() })
@@ -53,7 +54,7 @@ function login (req, res, next) {
     })
   }
 }
-function signup (req, res, next) {
+function signup (req, res) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
     return res.status(422).json({ errors: errors.array() })
@@ -112,7 +113,7 @@ function signup (req, res, next) {
     })
   }
 }
-function profile (req, res, next) {
+function profile (req, res) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
     return res.status(422).json({ errors: errors.array() })
