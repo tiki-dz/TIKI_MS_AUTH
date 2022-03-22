@@ -36,7 +36,7 @@ async function addClient (req, res) {
               city: userToAdd.city,
               type: 'client',
               phoneNumber: userToAdd.phoneNumber,
-              sexe: userToAdd.sexe,
+              sexe: userToAdd.sexe === 'Homme' ? 1 : 0,
               birthDate: userToAdd.birthDate,
               AccountEmail: newAccount.dataValues.email
             })

@@ -418,7 +418,7 @@ async function updateById (req, res) {
     userToUpdate.city = data.city
     userToUpdate.type = 'client'
     userToUpdate.phoneNumber = data.phoneNumber
-    userToUpdate.sexe = data.sexe
+    userToUpdate.sexe = data.sexe === 'Homme' ? 1 : 0
     userToUpdate.birthDate = data.birthDate
     await userToUpdate.save()
     console.log(userToUpdate)
