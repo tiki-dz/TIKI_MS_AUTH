@@ -21,27 +21,15 @@ exports.validate = (method) => {
           .isLength({ min: 3 }),
         body('phoneNumber').isNumeric().isLength({ min: 9 }),
         body('sexe').isIn(['Homme', 'Femme']),
-        body('birthDate').isDate()
-      ]
-    };
-    // eslint-disable-next-line no-lone-blocks
-    case 'updateUser': {
-      return [
-        body('firstName')
-          .matches(/^[A-Za-z\s]+$/)
-          .withMessage('Name must be alphabetic.')
-          .isLength({ min: 3 }),
-        body('lastName')
-          .matches(/^[A-Za-z\s]+$/)
-          .withMessage('lastname must be alphabetic.')
-          .isLength({ min: 3 }),
-        body('city')
-          .matches(/^[A-Za-z\s]+$/)
-          .withMessage('city must be alphabetic.')
-          .isLength({ min: 3 }),
-        body('phoneNumber').isNumeric().isLength({ min: 9 }),
-        body('sexe').isIn(['Homme', 'Femme']),
-        body('birthDate').isDate()
+        body('birthDate').isDate(),
+        body('orgaName').matches(/^[A-Za-z\s]+$/)
+          .withMessage('orgaName must be alphabetic.')
+          .isLength({ min: 5 }),
+        body('orgaDesc').matches(/^[A-Za-z\s]+$/)
+          .withMessage('orgaDesc must be alphabetic.')
+          .isLength({ min: 10 }),
+        body('orgaType').isIn(['Cinema', 'Stadium', 'Other', 'Theatre']),
+        body('orgaAddress').isLength({ min: 5 })
       ]
     };
     case 'verifyCode': {
