@@ -19,4 +19,11 @@ router.get('/client/:id', administratorController.findClientById)
 // add new client
 router.post('/client', validationAdministrator.validate('addClient'), administratorController.addClient)
 
+// *************************************************************************
+
+// activate client
+router.get('/client/:id/activate', administratorController.activateClient)
+// deactivate client
+router.get('/client/:id/deactivate', administratorController.deactivateClient)
+
 module.exports = router
