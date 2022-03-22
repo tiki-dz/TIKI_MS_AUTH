@@ -444,7 +444,7 @@ function resendVerficationCode (req, res) {
   }
 }
 
-function forgotPassword (req, res, next) {
+function passwordVerify (req, res, next) {
   // check id data is validated
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
@@ -489,4 +489,4 @@ function forgotPassword (req, res, next) {
   }
 }
 
-module.exports = { login, signup, verifyCode, profile, resendVerficationCode, updateById, deleteById, updateimage, forgotPassword }
+module.exports = { login, signup, verifyCode, profile, resendVerficationCode, updateById, deleteById, updateimage, passwordVerify }
