@@ -7,7 +7,7 @@ const bcrypt = Promise.promisifyAll(require('bcrypt-nodejs'))
 const saltRounds = 8
 
 // adding one client
-async function addClient (req, res, next) {
+async function addClient (req, res) {
 // check id data is validated
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {

@@ -18,11 +18,11 @@ router.get('/test', (req, rest) => { rest.send('test') })
 // ************************************************************************************************
 
 // updating an client with id
-router.put('/:id', validationClient.validate('updateUser'), clientController.updateById)
+router.put('/', verifyTokenAuth, validationClient.validate('updateUser'), clientController.updateById)
 // deleting an client with id
-router.delete('/:id', clientController.deleteById)
+router.delete('/', verifyTokenAuth, clientController.deleteById)
 // updating profil image client with id
 const upload = multer({ storage: multer.memoryStorage() })
-router.post('/:id/updateimage', upload.single('updateimage'), clientController.updateimage)
+router.post('/updateimage', verifyTokenAuth, upload.single('updateimage'), clientController.updateimage)
 
 module.exports = router

@@ -2,12 +2,13 @@ require('dotenv').config()
 const { validationResult } = require('express-validator/check')
 const { User } = require('../models')
 const { Account } = require('../models')
-const { Client } = require('../models')
+// const { Client } = require('../models')
 const fs = require('fs')
 const nodemailer = require('nodemailer')
 const ejs = require('ejs')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const config = process.env
 
 function login (req, res, next) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
@@ -358,34 +359,24 @@ function resendVerficationCode (req, res) {
 // ****************************************************************************************************
 // deleting an client with id
 async function deleteById (req, res) {
+  // check the authentification token
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+
   try {
-    const id = parseInt(req.params.id)
-    console.log('deleting Client with id = ', id)
-    const client = await Client.findOne({
+    const token = req.headers['x-access-token']
+    const decodedToken = jwt.verify(token, config.JWT_AUTH_KEY)
+    console.log('deleting Client with email = ', decodedToken.email)
+
+    const account = await Account.findOne({
       where: {
-        idClient: id
+        email: decodedToken.email
       }
     })
-    const user = await User.findOne({
-      where: {
-        idUser: client.dataValues.idUser
-      }
-    })
-    await Account.destroy({
-      where: {
-        email: user.dataValues.email
-      }
-    })
-    await User.destroy({
-      where: {
-        idUser: client.dataValues.idUser
-      }
-    })
-    await Client.destroy({
-      where: {
-        idClient: id
-      }
-    })
+    account.state = 10
+    account.save()
     return res.status(200).send('deleting the user')
   } catch (error) {
     res.status(400).send(error)
@@ -393,26 +384,33 @@ async function deleteById (req, res) {
 }
 // updating an client with id
 async function updateById (req, res) {
-  // check id data is validated
+  // check the authentification token
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
-    res.status(422).json({ errors: errors.array() })
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  // check id data is validated
+  const DATAerrors = validationResult(req) // Finds the validation DATAerrors in this request and wraps them in an object with handy functions
+  if (!DATAerrors.isEmpty()) {
+    res.status(422).json({ DATAerrors: DATAerrors.array() })
     return
   }
   try {
-    const id = parseInt(req.params.id)
+    const token = req.headers['x-access-token']
+    const decodedToken = jwt.verify(token, config.JWT_AUTH_KEY)
+    // const id = parseInt(req.params.id)
     const data = req.body
-    const userId = await Client.findOne({
-      where: {
-        idClient: id
-      },
-      attributes: ['idUser']
-    })
-    console.log(userId)
+    // const userId = await Client.findOne({
+    //   where: {
+    //     idClient: decodedToken.email
+    //   },
+    //   attributes: ['idUser']
+    // })
+    // console.log(userId)
 
     const userToUpdate = await User.findOne({
       where: {
-        idUser: userId.dataValues.idUser
+        AccountEmail: decodedToken.email
       }
     })
     userToUpdate.firstName = data.firstName
@@ -431,12 +429,19 @@ async function updateById (req, res) {
 }
 // updating profil image client with id
 async function updateimage (req, res) {
+  // check the authentification token
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+
   try {
-    console.log('start')
+    const token = req.headers['x-access-token']
+    const decodedToken = jwt.verify(token, config.JWT_AUTH_KEY)
     const img = req.file.buffer.toString('base64')
     const user = await User.findOne({
       where: {
-        idUser: req.params.id
+        AccountEmail: decodedToken.email
       }
     })
     user.profilePicture = img
