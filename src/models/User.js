@@ -10,7 +10,6 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true,
       primaryKey: true
     },
-
     firstName: {
       type: DataTypes.STRING(45),
       allowNull: false
@@ -24,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     phoneNumber: {
       type: DataTypes.INTEGER(10),
-      allowNull: false,
+      allowNull: true,
       validate: {
         len: [9, 9]
       }
@@ -40,7 +39,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     sexe: {
       type: DataTypes.INTEGER(1),
-      allowNull: false
+      allowNull: true
     },
     type: {
       type: DataTypes.STRING(10),
@@ -54,10 +53,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     classMethods: {
       associate: function (models) {
-        user.belongsTo(models.Account, {
-          foreignKey: 'email',
-          as: 'Accouunt'
-        })
+        user.belongsTo(models.Account)
         user.hasOne(models.Administrator)
         user.hasOne(models.Client)
         user.hasOne(models.Partner)

@@ -11,10 +11,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       classMethods: {
         associate: function (models) {
-          code.belongsTo(models.Account, {
-            foreignKey: 'email',
-            as: 'Account'
-          })
+          code.belongsTo(models.Account)
         }
       }
     }

@@ -42,7 +42,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     classMethods: {
       associate: function (models) {
-        partner.belongsTo(models.User, { foreignKey: 'idUser', as: 'User', constraints: false })
+        partner.belongsTo(models.User)
         console.log('Partner: user, cinema stadium theatre other!')
         partner.hasOne(models.Stadium)
         partner.hasOne(models.Cinema)
