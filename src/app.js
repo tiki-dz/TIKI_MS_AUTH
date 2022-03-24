@@ -1,4 +1,4 @@
-const { sequelize } = require('./models')
+// const { sequelize } = require('./models')
 // const createError = require("http-errors")
 const express = require('express')
 const path = require('path')
@@ -24,9 +24,14 @@ app.use(express.static(path.join(__dirname, 'public')))
 
 app.use('/api', indexRouter)
 
-sequelize.query('SET FOREIGN_KEY_CHECKS = 0').then(function () {
-  sequelize.sync({ force: false })
-})
+// catch 404 and forward to error handler
+// sequelize.query('SET FOREIGN_KEY_CHECKS = 0').then(function () {
+//   sequelize.sync({ force: true })
+// })
+
+// sequelize.query('SET FOREIGN_KEY_CHECKS = 0').then(function () {
+//   sequelize.sync({ force: false })
+// })
 
 app.listen(5001)
 

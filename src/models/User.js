@@ -32,10 +32,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(45)
     },
     profilePicture: {
-      type: DataTypes.STRING(45),
-      validate: {
-        isUrl: true
-      }
+      type: DataTypes.TEXT()
+      // validate: {
+      //   isUrl: true
+      // }
     },
     sexe: {
       type: DataTypes.INTEGER(1),
