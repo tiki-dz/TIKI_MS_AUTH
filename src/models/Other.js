@@ -25,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     classMethods: {
       associate: function (models) {
-        other.belongsTo(models.Partner, { foreignKey: 'idPartner', as: 'Partner', constraints: false })
+        other.belongsTo(models.Partner)
         console.log('other belongs to partner!')
       }
     }
