@@ -1,10 +1,9 @@
+/* eslint-disable no-lone-blocks */
 const { body } = require('express-validator/check')
-const { param } = require('express-validator/check')
 
 exports.validate = (method) => {
   switch (method) {
-    // eslint-disable-next-line no-lone-blocks
-    case 'addClient': {
+    case 'signup': {
       return [
         body('email', 'Invalid email format').isEmail(),
         body('password', 'Invalid value min length 8').isLength({ min: 8 }),
@@ -22,19 +21,27 @@ exports.validate = (method) => {
           .isLength({ min: 3 }),
         body('phoneNumber').isNumeric().isLength({ min: 9 }),
         body('sexe').isIn(['Homme', 'Femme']),
-        body('birthDate').isDate()
+        body('birthDate').isDate(),
+        body('orgaName').matches(/^[A-Za-z\s]+$/)
+          .withMessage('orgaName must be alphabetic.')
+          .isLength({ min: 5 }),
+        body('orgaDesc').matches(/^[A-Za-z\s]+$/)
+          .withMessage('orgaDesc must be alphabetic.')
+          .isLength({ min: 10 }),
+        body('orgaType').isIn(['Cinema', 'Stadium', 'Other', 'Theatre']),
+        body('orgaAddress').isLength({ min: 5 })
       ]
     };
-    case 'activate': {
+    case 'verifyCode': {
       return [
-        body('state', 'Invalid state').isIn([1]),
-        param('id', 'Id must be a number').isNumeric()
+        body('email', 'Invalid email format').isEmail(),
+        body('code').isNumeric().isLength({ min: 6, max: 6 })
       ]
-    }
-    case 'deactivate': {
+    };
+    case 'login': {
       return [
-        body('state', 'Invalid state').isIn([2]),
-        param('id', 'Id must be a number').isNumeric()
+        body('email', 'Invalid email format').isEmail(),
+        body('password', 'Invalid value min length 8').isLength({ min: 8 })
       ]
     }
   }

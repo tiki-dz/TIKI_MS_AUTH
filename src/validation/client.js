@@ -24,7 +24,6 @@ exports.validate = (method) => {
         body('birthDate').isDate()
       ]
     };
-
     // eslint-disable-next-line no-lone-blocks
     case 'updateUser': {
       return [
@@ -41,7 +40,7 @@ exports.validate = (method) => {
           .withMessage('city must be alphabetic.')
           .isLength({ min: 3 }),
         body('phoneNumber').isNumeric().isLength({ min: 9 }),
-        body('sexe').isIn([0, 1]),
+        body('sexe').isIn(['Homme', 'Femme']),
         body('birthDate').isDate()
       ]
     };
@@ -54,7 +53,7 @@ exports.validate = (method) => {
     case 'login': {
       return [
         body('email', 'Invalid email format').isEmail(),
-        body('password', 'Invalid value min length r').isLength({ min: 8 })
+        body('password', 'Invalid value min length 8').isLength({ min: 8 })
       ]
     }
   }

@@ -1,10 +1,11 @@
 const jwt = require('jsonwebtoken')
 const config = process.env
-const { Account } = require('../models')
+const { Account, User, Administrator } = require('../models')
 const verifyToken = (req, res, next) => {
   const token = req.headers['x-access-token']
   if (!token) {
     return res.status(403).send({
+      errors: ['A token is required for authentication'],
       success: false,
       message: 'A token is required for authentication'
     }
@@ -28,12 +29,31 @@ const verifyToken = (req, res, next) => {
       }
       if (account.state === 2) {
         return res.status(401).send({
+          errors: ['Unauthorized'],
           success: false,
           message: 'Unauthorized'
         }
         )
       }
-      return next()
+      User.findOne({
+        where: {
+          AccountEmail: decodedToken.email
+        },
+        include: [
+          { model: Administrator }
+        ]
+      }).then((admin) => {
+        console.log(admin)
+        if (admin.Administrator.role === 'superadmin') {
+          return next()
+        } else {
+          return res.status(403).send({
+            message: 'Unauthorized',
+            success: false,
+            errors: ['Unauthorized']
+          })
+        }
+      })
     })
   } catch (err) {
     return res.status(401).send({
