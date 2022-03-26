@@ -2,6 +2,9 @@ const express = require('express')
 const router = express.Router()
 const administratorController = require('../controllers/administrator')
 const validationAdministrator = require('../validation/administrator')
+
+router.post('/client', validationAdministrator.validate('addClient'), administratorController.addClient)
+
 const adminController = require('../controllers/admin')
 const validationClient = require('../validation/client')
 
@@ -30,8 +33,8 @@ router.post('/client', validationAdministrator.validate('addClient'), administra
 // *************************************************************************
 
 // activate client
-router.get('/client/:id/activate', administratorController.activateClient)
+router.put('/client/:id/activate', validationAdministrator.validate('activate'), administratorController.activateClient)
 // deactivate client
-router.get('/client/:id/deactivate', administratorController.deactivateClient)
+router.put('/client/:id/deactivate', validationAdministrator.validate('deactivate'), administratorController.deactivateClient)
 
 module.exports = router

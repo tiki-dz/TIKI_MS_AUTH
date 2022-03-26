@@ -1,4 +1,5 @@
 const { body } = require('express-validator/check')
+const { param } = require('express-validator/check')
 
 exports.validate = (method) => {
   switch (method) {
@@ -24,5 +25,17 @@ exports.validate = (method) => {
         body('birthDate').isDate()
       ]
     };
+    case 'activate': {
+      return [
+        body('state', 'Invalid state').isIn([1]),
+        param('id', 'Id must be a number').isNumeric()
+      ]
+    }
+    case 'deactivate': {
+      return [
+        body('state', 'Invalid state').isIn([2]),
+        param('id', 'Id must be a number').isNumeric()
+      ]
+    }
   }
 }
