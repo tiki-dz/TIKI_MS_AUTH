@@ -15,12 +15,6 @@ exports.validate = (method) => {
           .matches(/^[A-Za-z\s]+$/)
           .withMessage('lastname must be alphabetic.')
           .isLength({ min: 3 }),
-        body('city')
-          .matches(/^[A-Za-z\s]+$/)
-          .withMessage('city must be alphabetic.')
-          .isLength({ min: 3 }),
-        body('phoneNumber').isNumeric().isLength({ min: 9 }),
-        body('sexe').isIn(['Homme', 'Femme']),
         body('birthDate').isDate()
       ]
     };
