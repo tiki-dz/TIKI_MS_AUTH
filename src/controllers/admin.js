@@ -1,8 +1,11 @@
 require('dotenv').config()
 const { validationResult } = require('express-validator/check')
 const { Account, User, Administrator } = require('../models')
-const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const { Client } = require('../models')
+const Promise = require('bluebird')
+const bcrypt = Promise.promisifyAll(require('bcrypt-nodejs'))
+const saltRounds = 8
 
 function login (req, res) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
@@ -159,4 +162,177 @@ function profile (req, res) {
     })
   }
 }
-module.exports = { login, signup, profile }
+
+// adding one client
+async function addClient (req, res) {
+// check id data is validated
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+    return
+  }
+  try {
+    const userToAdd = req.body
+    bcrypt.genSalt(saltRounds, function (err, salt) {
+      if (err) {
+        console.log('error in bcrypt.genSalt')
+        res.status(422).json({ errors: err, success: false, message: 'error in bcrypt.genSalt' })
+      } else {
+        bcrypt.hash(userToAdd.password, salt, null, async function (err, hash) {
+          if (err) {
+            console.log('error in bcrypt.hash')
+            res.status(422).json({ errors: err, success: false, message: 'error in bcrypt.hash' })
+            return res.status(500).send('err in bcrypt')
+          } else {
+            console.log(hash)
+            // todo
+            // new err controle (ali) for multipal creation
+            const newAccount = await Account.create({
+              email: userToAdd.email,
+              password: hash,
+              state: 1
+            })
+            const newUser = await User.create({
+              firstName: userToAdd.firstName,
+              lastName: userToAdd.lastName,
+              city: userToAdd.city,
+              type: 'client',
+              phoneNumber: userToAdd.phoneNumber,
+              sexe: userToAdd.sexe === 'Homme' ? 1 : 0,
+              birthDate: userToAdd.birthDate,
+              AccountEmail: newAccount.dataValues.email
+            })
+            const newClient = await Client.create({
+              UserIdUser: newUser.dataValues.idUser
+            })
+            console.log('new user ID:', newUser, newClient)
+            return res.status(200).send({ data: newUser.toJSON(), success: true, message: 'the client has been added' })
+          }
+        })
+      }
+    })
+  } catch (e) {
+    res.status(400).send({ error: e, success: false, message: 'processing err' })
+  }
+
+// if data is validated add in database;
+}
+// get all clients
+async function findAllClients (req, res) {
+  try {
+    const Clients = await User.findAll({
+      where: {
+        type: 'client'
+      },
+      include: [{ model: Client }],
+      limit: 50
+    })
+    return res.status(200).send({ data: Clients.toJSON(), success: true })
+  } catch (error) {
+    res.status(400).send({ error: error, success: false, message: 'processing err' })
+  }
+}
+// get one client by id
+async function findClientById (req, res) {
+  try {
+    const id = parseInt(req.params.id)
+    const client = await Client.findOne({
+      where: {
+        idClient: id
+      }
+    })
+    const theFullClient = await User.findOne({
+      where: {
+        idUser: client.dataValues.UserIdUser
+      },
+      include: [{ model: Client }]
+    })
+    return res.status(200).send({ data: theFullClient, success: true })
+  } catch (error) {
+    res.status(400).send({ error: error, success: false, message: 'processing err' })
+  }
+}
+// activate client by id
+async function activateClient (req, res) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array() })
+  } try {
+    const id = parseInt(req.params.id)
+    const client = await Client.findOne({
+      where: {
+        idClient: id
+      }
+    })
+    const user = await User.findOne({
+      where: {
+        idUser: client.dataValues.UserIdUser
+      }
+    })
+    const account = await Account.findOne({
+      where: {
+        email: user.dataValues.AccountEmail
+      }
+    })
+    let message = 'Account activated successfuly'
+    if (account.state !== 1) {
+      account.update({
+        state: req.body.state
+      })
+    } else {
+      message = 'already activated user!'
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: message
+    })
+  } catch (error) {
+    res.status(400).send({ error: error, success: false, message: 'processing err' })
+  }
+}
+// deactivate client by id
+async function deactivateClient (req, res) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array() })
+  } try {
+    const id = parseInt(req.params.id)
+    const client = await Client.findOne({
+      where: {
+        idClient: id
+      }
+    })
+    const user = await User.findOne({
+      where: {
+        idUser: client.dataValues.UserIdUser
+      }
+    })
+    const account = await Account.findOne({
+      where: {
+        email: user.dataValues.AccountEmail
+      }
+    })
+    let message = 'Account Deactivated successfuly'
+    if (account.state !== 2) {
+      account.update({
+        state: req.body.state
+      })
+    } else {
+      message = 'already deactivated user!'
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: message
+    })
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: 'error',
+      errors: [error]
+    })
+  }
+}
+
+module.exports = { login, signup, profile, addClient, findAllClients, findClientById, deactivateClient, activateClient }
