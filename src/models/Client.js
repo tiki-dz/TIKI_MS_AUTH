@@ -25,11 +25,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       classMethods: {
         associate: function (models) {
-          client.belongsTo(models.User, {
-            foreignKey: 'idUser',
-            as: 'User',
-            constraints: false
-          })
+          client.belongsTo(models.User)
           console.log('Client belongs to User!')
         }
       }
