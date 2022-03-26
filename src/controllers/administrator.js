@@ -23,6 +23,7 @@ async function addClient (req, res) {
         bcrypt.hash(userToAdd.password, salt, null, async function (err, hash) {
           if (err) {
             console.log('error')
+            return res.status(500).send('err in bcrypt')
           } else {
             console.log(hash)
             const newAccount = await Account.create({
@@ -44,11 +45,11 @@ async function addClient (req, res) {
               UserIdUser: newUser.dataValues.idUser
             })
             console.log('new user ID:', newUser, newClient)
+            return res.status(200).send('user add')
           }
         })
       }
     })
-    return res.status(200).send('user add')
   } catch (e) {
     res.status(400).send(e)
   }
