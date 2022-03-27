@@ -4,11 +4,17 @@ const { Administrator } = require('./Administrator')
 const { Client } = require('./Client')
 
 module.exports = (sequelize, DataTypes) => {
-  const user = sequelize.define('User', {
-    idUser: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      primaryKey: true
+  const user = sequelize.define('UserPartnerInvalid', {
+    email: {
+      type: DataTypes.STRING(30),
+      primaryKey: true,
+      validate: {
+        isEmail: true
+      }
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false
     },
     firstName: {
       type: DataTypes.STRING(45),
@@ -48,16 +54,27 @@ module.exports = (sequelize, DataTypes) => {
     birthDate: {
       type: DataTypes.DATEONLY,
       allowNull: false
+    },
+    orgaName: {
+      type: DataTypes.STRING(45),
+      allowNull: false
+    },
+    orgaDesc: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    orgaType: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    orgaAddress: {
+      type: DataTypes.STRING,
+      allowNull: false
     }
 
   }, {
     classMethods: {
       associate: function (models) {
-        user.belongsTo(models.Account)
-        user.hasOne(models.Administrator)
-        user.hasOne(models.Client)
-        user.hasOne(models.Partner)
-        console.log('Account has one User!')
       }
     }
   })

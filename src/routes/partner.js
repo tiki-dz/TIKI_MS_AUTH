@@ -13,10 +13,7 @@ router.post('/verifyCode',
   validationPartner.validate('verifyCode'),
   partnerController.verifyCode
 )
-router.post('/login',
-  validationPartner.validate('login'),
-  partnerController.login
-)
+// router.post('/login', validationPartner.validate('login'), partnerController.login)
 router.get('/profile', verifyTokenAuth, partnerController.profile)
 router.post('/resendVerfication', validationPartner.validate('login'), partnerController.resendVerficationCode)
 module.exports = router

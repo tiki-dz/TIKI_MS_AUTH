@@ -11,12 +11,10 @@ const verifyTokenAuth = require('../utils/verifyTokenAuth')
 router.post('/signup', validationClient.validate('signup'), clientController.signup)
 router.post('/verifyCode', verifyToken, validationClient.validate('verifyCode'), clientController.verifyCode)
 router.post('/resendVerfication', validationClient.validate('login'), clientController.resendVerficationCode)
-router.post('/login', validationClient.validate('login'), clientController.login)
+// router.post('/login', validationClient.validate('login'), clientController.login)
 router.get('/profile', verifyTokenAuth, clientController.profile)
 router.get('/test', (req, rest) => { rest.send('test') })
-
 // ************************************************************************************************
-
 // updating an client with id
 router.put('/', verifyTokenAuth, validationClient.validate('updateUser'), clientController.updateById)
 // deleting an client with id
