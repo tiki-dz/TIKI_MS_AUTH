@@ -411,7 +411,7 @@ async function updateClientByToken (req, res) {
     console.log('user id= ' + userToUpdate.idUser + ' has been updated')
     return res.status(200).send({ data: userToUpdate.toJSON(), success: true, message: 'the client has been updated' })
   } catch (error) {
-    res.status(400).send({ errors: errors, success: false, message: 'processing err' })
+    res.status(500).send({ errors: errors, success: false, message: 'processing err' })
   }
 }
 // updating profil image client with id
@@ -435,7 +435,7 @@ async function updateimage (req, res) {
     user.save()
     res.status(200).send({ success: true, message: 'Image saved successfuly' })
   } catch (error) {
-    res.status(400).send({ errors: errors, success: false, message: 'processing err' })
+    res.status(500).send({ errors: errors, success: false, message: 'processing err' })
   }
 }
 // check the authentification token

@@ -212,7 +212,7 @@ async function addClient (req, res) {
       }
     })
   } catch (e) {
-    res.status(400).send({ error: e, success: false, message: 'processing err' })
+    res.status(500).send({ error: e, success: false, message: 'processing err' })
   }
 
 // if data is validated add in database;
@@ -229,7 +229,7 @@ async function findAllClients (req, res) {
     })
     return res.status(200).send({ data: Clients.toJSON(), success: true })
   } catch (error) {
-    res.status(400).send({ error: error, success: false, message: 'processing err' })
+    res.status(500).send({ error: error, success: false, message: 'processing err' })
   }
 }
 // get one client by id
@@ -249,7 +249,7 @@ async function findClientById (req, res) {
     })
     return res.status(200).send({ data: theFullClient, success: true })
   } catch (error) {
-    res.status(400).send({ error: error, success: false, message: 'processing err' })
+    res.status(500).send({ error: error, success: false, message: 'processing err' })
   }
 }
 // activate client by id
@@ -288,7 +288,7 @@ async function activateClient (req, res) {
       message: message
     })
   } catch (error) {
-    res.status(400).send({ error: error, success: false, message: 'processing err' })
+    res.status(500).send({ error: error, success: false, message: 'processing err' })
   }
 }
 // deactivate client by id
@@ -327,7 +327,7 @@ async function deactivateClient (req, res) {
       message: message
     })
   } catch (error) {
-    return res.status(400).json({
+    return res.status(500).json({
       success: false,
       message: 'error',
       errors: [error]
