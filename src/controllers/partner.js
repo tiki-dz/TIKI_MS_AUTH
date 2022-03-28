@@ -6,7 +6,68 @@ const nodemailer = require('nodemailer')
 const ejs = require('ejs')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-
+function resetPassword (req, res, next) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json(
+      { errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  const token = req.headers['x-access-token']
+  const decodedToken = jwt.verify(token, process.env.JWT_AUTHPARTNER_KEY)
+  Account.findOne({
+    where: {
+      email: decodedToken.email
+    },
+    attributes: ['email', 'password', 'state']
+  }).then(function (account) {
+    console.log(account)
+    if (account === null) {
+      return res.status(404).json({
+        success: false,
+        message: 'Account don"t exist',
+        errors: ['account d"ont exist']
+      })
+    }
+    // eslint-disable-next-line node/handle-callback-err
+    bcrypt.compare(req.body.password, account.password, (err, data) => {
+      if (err) {
+        return res.status(500).json({
+          success: false,
+          message: 'decode password error',
+          errors: [err]
+        })
+      }
+      if (!data) {
+        return res.status(401).json({
+          success: false,
+          message: 'invalid credentials',
+          errors: ['invalid credentials']
+        })
+      }
+      bcrypt.hash(req.body.newPassword, 10, function (err, hash) {
+        if (err) {
+          return res.status(500).json({
+            success: false,
+            message: 'Hash error',
+            errors: ['internal server error']
+          })
+        }
+        account.update(
+          {
+            password: hash
+          }
+        ).then((data) => {
+          return res.status(200).send({
+            message: 'password updated successfully',
+            data: null,
+            success: true
+          })
+        })
+      })
+      // password are same
+    })
+  })
+}
 function login (req, res, next) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
@@ -401,4 +462,4 @@ function resendVerficationCode (req, res) {
   }
 }
 
-module.exports = { login, signup, verifyCode, profile, resendVerficationCode }
+module.exports = { login, resetPassword, signup, verifyCode, profile, resendVerficationCode }
