@@ -3,6 +3,12 @@ const { body } = require('express-validator/check')
 
 exports.validate = (method) => {
   switch (method) {
+    case 'resetPassword': {
+      return [
+        body('password', 'Invalid value min length 8').isLength({ min: 8 }),
+        body('newPassword', 'Invalid value min length 8').isLength({ min: 8 })
+      ]
+    }
     case 'signup': {
       return [
         body('email', 'Invalid email format').isEmail(),

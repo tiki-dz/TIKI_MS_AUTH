@@ -9,5 +9,22 @@ exports.validate = (method) => {
         body('password', 'Invalid value min length 8').isLength({ min: 8 })
       ]
     }
+    case 'forgetPasswordSendVerificationAccount' : {
+      return [
+        body('email', 'Invalid email format').isEmail()
+      ]
+    }
+    case 'forgetPasswordValidateAccount' : {
+      return [
+        body('email', 'Invalid email format').isEmail(),
+        body('code').isNumeric().isLength({ min: 6, max: 6 })
+      ]
+    }
+    case 'forgetPasswordChangePasswordAccount' : {
+      return [
+        body('email', 'Invalid email format').isEmail(),
+        body('password', 'Invalid value min length 8').isLength({ min: 8 })
+      ]
+    }
   }
 }
