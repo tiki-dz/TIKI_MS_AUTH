@@ -508,6 +508,7 @@ async function updateimage (req, res) {
     user.save()
     res.status(200).send({ success: true, message: 'Image saved successfuly' })
   } catch (error) {
+    console.log(error)
     res.status(500).send({ errors: errors, success: false, message: 'processing err' })
   }
 }

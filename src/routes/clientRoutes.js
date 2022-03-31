@@ -25,6 +25,6 @@ router.put('/', verifyTokenAuth, validationClient.validate('updateUser'), client
 router.delete('/', verifyTokenAuth, clientController.deleteClientByToken)
 // updating profil image client with id
 const upload = multer({ storage: multer.memoryStorage() })
-router.post('/updateimage', verifyTokenAuth, upload.single('updateimage'), clientController.updateimage)
+router.put('/updateimage', verifyTokenAuth, upload.single('updateimage'), clientController.updateimage)
 
 module.exports = router
