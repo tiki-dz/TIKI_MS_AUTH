@@ -275,6 +275,7 @@ function signup (req, res) {
               firstName: req.body.firstName,
               lastName: req.body.lastName,
               birthDate: req.body.birthDate,
+              profilePicture: 'ProfileImage/user-default.jpg-1648754555891.jpg',
               type: 'client',
               city: req.body.city,
               sexe: req.body.sexe === 'Homme' ? 1 : 0,
@@ -498,18 +499,24 @@ async function updateimage (req, res) {
   try {
     const token = req.headers['x-access-token']
     const decodedToken = jwt.verify(token, config.JWT_AUTH_KEY)
-    const img = req.file.buffer.toString('base64')
+    const imgUrl = req.file.filename.toString()
     const user = await User.findOne({
       where: {
         AccountEmail: decodedToken.email
       }
     })
-    user.profilePicture = img
+    // test the default image and deleting the the previous one
+    if (user.profilePicture !== 'ProfileImage/user-default.jpg-1648754555891.jpg') {
+      const filePath = 'Upload/ProfileImage/' + user.profilePicture
+      fs.unlinkSync(filePath)
+    }
+    // updating the url in the database
+    user.profilePicture = 'ProfileImage/' + imgUrl
     user.save()
     res.status(200).send({ success: true, message: 'Image saved successfuly' })
   } catch (error) {
     console.log(error)
-    res.status(500).send({ errors: errors, success: false, message: 'processing err' })
+    res.status(500).send({ errors: error.message, success: false, message: 'processing err' })
   }
 }
 // check the authentification token

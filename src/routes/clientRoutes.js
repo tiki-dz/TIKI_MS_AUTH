@@ -2,8 +2,8 @@ const express = require('express')
 const router = express.Router()
 const clientController = require('../controllers/clientController')
 const validationClient = require('../validation/clientValidation')
-
 const multer = require('multer')
+
 // const checkifuserexist = require("../utils/checkifuserexist");
 const verifyToken = require('../utils/verifyToken')
 const verifyTokenAuth = require('../utils/verifyTokenAuth')
@@ -24,7 +24,30 @@ router.put('/', verifyTokenAuth, validationClient.validate('updateUser'), client
 // deleting an client with id
 router.delete('/', verifyTokenAuth, clientController.deleteClientByToken)
 // updating profil image client with id
-const upload = multer({ storage: multer.memoryStorage() })
+// seting the storage rules
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './Upload/ProfileImage/')
+  },
+  filename: function (req, file, cb) {
+    const extArray = file.originalname.split('.')
+    const extension = extArray[extArray.length - 1]
+    cb(null, file.originalname + '-' + Date.now() + '.' + extension)
+  }
+})
+// setting filter
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png' || file.mimetype === 'image/jpg') {
+    // accepting the file
+    cb(null, true)
+  } else {
+    // reject the file
+    cb(new Error('the file is not an image'), false)
+  }
+}
+// the max size of an image is 20Mo
+const upload = multer({ storage: storage, limits: { fileSize: 1024 * 1024 * 20 }, fileFilter: multerFilter })
+
 router.put('/updateimage', verifyTokenAuth, upload.single('updateimage'), clientController.updateimage)
 
 module.exports = router

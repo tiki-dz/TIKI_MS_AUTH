@@ -249,6 +249,7 @@ function signup (req, res, next) {
               firstName: req.body.firstName,
               lastName: req.body.lastName,
               birthDate: req.body.birthDate,
+              profile: 'ProfileImage/user-default.jpg-1648754555891.jpg',
               type: 'partner',
               city: req.body.city,
               sexe: req.body.sexe === 'Homme' ? 1 : 0,
