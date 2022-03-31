@@ -1,6 +1,6 @@
 require('dotenv').config()
 const { validationResult } = require('express-validator/check')
-const { User } = require('../models')
+const { User, UserClientInvalid, Client } = require('../models')
 const { Account } = require('../models')
 // const { Client } = require('../models')
 const fs = require('fs')
@@ -10,7 +10,69 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const config = process.env
 
-function login (req, res) {
+function resetPassword (req, res, next) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json(
+      { errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  const token = req.headers['x-access-token']
+  const decodedToken = jwt.verify(token, process.env.JWT_AUTH_KEY)
+  Account.findOne({
+    where: {
+      email: decodedToken.email
+    },
+    attributes: ['email', 'password', 'state']
+  }).then(function (account) {
+    console.log(account)
+    if (account === null) {
+      return res.status(404).json({
+        success: false,
+        message: 'Account don"t exist',
+        errors: ['account d"ont exist']
+      })
+    }
+    // eslint-disable-next-line node/handle-callback-err
+    bcrypt.compare(req.body.password, account.password, (err, data) => {
+      if (err) {
+        return res.status(500).json({
+          success: false,
+          message: 'decode password error',
+          errors: [err]
+        })
+      }
+      if (!data) {
+        return res.status(401).json({
+          success: false,
+          message: 'invalid credentials',
+          errors: ['invalid credentials']
+        })
+      }
+      bcrypt.hash(req.body.newPassword, 10, function (err, hash) {
+        if (err) {
+          return res.status(500).json({
+            success: false,
+            message: 'Hash error',
+            errors: ['internal server error']
+          })
+        }
+        account.update(
+          {
+            password: hash
+          }
+        ).then((data) => {
+          return res.status(200).send({
+            message: 'password updated successfully',
+            data: null,
+            success: true
+          })
+        })
+      })
+      // password are same
+    })
+  })
+}
+function login (req, res, next) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
     return res.status(422).json(
@@ -105,33 +167,59 @@ function verifyCode (req, res) {
         })
       }
       if (decodedToken.email === req.body.email) {
-        Account.findOne({
+        UserClientInvalid.findOne({
           where: {
             email: req.body.email
           }
-        }).then(function (account) {
-          if (account.state === 2) {
-            return res.status(409).send({
-              message: 'your account is desativated by admin',
-              errors: ['your account is desactivated by admin'],
-              success: false
-            })
-          }
-          if (account) {
-            account.update({
-              state: 1
-            })
-              .then(function (account) {
-                const Authtoken = jwt.sign({ email: req.body.email }, process.env.JWT_AUTH_KEY, {
-                  expiresIn: '30d'
-                })
-                res.status(200).send({
-                  data: { token: Authtoken },
-                  success: true,
-                  message: 'User authenficated succefully'
+        }).then((invalidUser) => {
+          Account.create({
+            email: invalidUser.email,
+            password: invalidUser.password,
+            state: 1
+          }).then((account, err) => {
+            User.create({
+              AccountEmail: invalidUser.email,
+              firstName: invalidUser.firstName,
+              lastName: invalidUser.lastName,
+              birthDate: invalidUser.birthDate,
+              type: 'client',
+              city: invalidUser.city,
+              sexe: invalidUser.sexe === 'Homme' ? 1 : 0,
+              phoneNumber: req.body.phoneNumber
+            }).then((user) => {
+              Client.create({
+                UserIdUser: user.idUser
+              }).then((client) => {
+                UserClientInvalid.destroy({
+                  where: {
+                    email: invalidUser.email
+                  }
+                }).then((userClientInvalid) => {
+                  const Authtoken = jwt.sign({ email: req.body.email }, process.env.JWT_AUTH_KEY, {
+                    expiresIn: '30d'
+                  })
+                  User.findOne({
+                    where: {
+                      AccountEmail: req.body.email
+
+                    },
+                    include: [
+                      { model: Client }]
+                  }).then(user => {
+                    res.status(200).send({
+                      data: {
+                        token: Authtoken,
+                        typeAccount: user.type,
+                        User: user
+                      },
+                      success: true,
+                      message: 'User authenficated succefully'
+                    })
+                  })
                 })
               })
-          }
+            })
+          })
         })
       } else {
         res.status(400).json({
@@ -176,13 +264,14 @@ function signup (req, res) {
               errors: ['internal server error']
             })
           }
-          Account.create({
-            email: req.body.email,
-            password: hash,
-            state: 0
-          }).then((account, err) => {
-            User.create({
-              AccountEmail: req.body.email,
+          UserClientInvalid.destroy({
+            where: {
+              email: req.body.email
+            }
+          }).then((user) => {
+            UserClientInvalid.create({
+              password: hash,
+              email: req.body.email,
               firstName: req.body.firstName,
               lastName: req.body.lastName,
               birthDate: req.body.birthDate,
@@ -195,7 +284,7 @@ function signup (req, res) {
               // eslint-disable-next-line node/handle-callback-err
               bcrypt.hash(codeSended.toString(), 10, function (err, hash) {
                 const token = jwt.sign({ email: req.body.email, code: hash }, process.env.JWT_NOTAUTH_KEY, {
-                  expiresIn: 60
+                  expiresIn: 600000
                 })
                 sendClientActivationEmail(req.body.email, codeSended)
                 return res.status(200).json({
@@ -254,13 +343,22 @@ function profile (req, res) {
   try {
     const token = req.headers['x-access-token']
     const decodedToken = jwt.verify(token, process.env.JWT_AUTH_KEY)
+    console.log(decodedToken.email)
     User.findOne({
       where: {
         AccountEmail: decodedToken.email
       },
-      attributes: ['firstName', 'profilePicture', 'lastName', 'city', 'phoneNumber', 'sexe', 'birthDate', 'AccountEmail']
-    }).then(function (user) {
-      return res.status(200).json({ data: user, success: true, message: 'success' })
+      include: [
+        { model: Client }]
+    }).then(user => {
+      res.status(200).send({
+        data: {
+          typeAccount: user.type,
+          User: user
+        },
+        success: true,
+        message: 'User authenficated succefully'
+      })
     })
   } catch (err) {
     return res.status(500).json({
@@ -280,22 +378,17 @@ function resendVerficationCode (req, res) {
     })
   }
   try {
-    Account.findOne({
+    UserClientInvalid.findOne({
       where: {
         email: req.body.email
       },
-      attributes: ['email', 'password', 'state'],
-      include: [
-        { model: User, attributes: ['type'] }
-      ]
+      attributes: ['email', 'password']
     }).then(function (account) {
-    // check the password
-      console.log(account)
       if (account === null) {
         return res.status(404).json({
-          message: 'account dont exist',
+          message: 'invalid data',
           success: false,
-          errors: ['account dont exist']
+          errors: ['invalid data']
         })
       }
       // eslint-disable-next-line node/handle-callback-err
@@ -305,27 +398,6 @@ function resendVerficationCode (req, res) {
             message: 'Invalid credentials',
             success: false,
             errors: ['Invalid credentials']
-          })
-        }
-        if (account.User.type !== 'client') {
-          return res.status(401).json({
-            message: 'Unauthorized',
-            success: false,
-            errors: ['Unauthorized']
-          })
-        }
-        if (account.state === 1) {
-          return res.status(200).json({
-            message: 'your account is already activated',
-            success: false,
-            errors: ['your account is already activated']
-          })
-        }
-        if (account.state === 2) {
-          return res.status(403).json({
-            message: 'your account is desactivated by admin',
-            success: false,
-            errors: ['your account is desactivated by admin']
           })
         }
         const codeSended = Math.round(Math.random() * (999999 - 100000) + 100000)
@@ -359,6 +431,7 @@ function resendVerficationCode (req, res) {
     })
   }
 }
+// ****************************************************************************************************
 // deleting an client with id
 async function deleteClientByToken (req, res) {
   // check id data is validated
@@ -484,4 +557,4 @@ function passwordVerify (req, res, next) {
   }
 }
 
-module.exports = { login, signup, verifyCode, profile, resendVerficationCode, deleteClientByToken, updateimage, updateClientByToken, sendClientActivationEmail, passwordVerify }
+module.exports = { resetPassword, login, signup, verifyCode, profile, resendVerficationCode, deleteClientByToken, updateimage, updateClientByToken, sendClientActivationEmail, passwordVerify }
