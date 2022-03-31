@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
-const partnerController = require('../controllers/partner')
-const validationPartner = require('../validation/partner')
+const partnerController = require('../controllers/partnerController')
+const validationPartner = require('../validation/partnerValidation')
 const verifyToken = require('../utils/verifyTokenPartner')
 const verifyTokenAuth = require('../utils/verifyTokenAuthPartner')
 router.post('/signup',

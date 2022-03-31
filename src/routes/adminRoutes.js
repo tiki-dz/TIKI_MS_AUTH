@@ -1,8 +1,8 @@
 const express = require('express')
 const router = express.Router()
-const validationAdministrator = require('../validation/administrator')
-const adminController = require('../controllers/admin')
-const validationClient = require('../validation/client')
+const validationAdministrator = require('../validation/administratorValidation')
+const adminController = require('../controllers/adminController')
+const validationClient = require('../validation/clientValidation')
 const verifyToken = require('../utils/verifyTokenAuthAdmin')
 const verifyTokenAuthSuperAdmin = require('../utils/verifyTokenAuthSuperAdmin')
 

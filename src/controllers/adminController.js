@@ -220,13 +220,13 @@ async function addClient (req, res) {
 // get all clients
 async function findAllClients (req, res) {
   try {
+    const { page = 1, limit = 2 } = req.query
     const Clients = await User.findAll({
       where: {
         type: 'client'
       },
-      include: [{ model: Client }],
-      limit: 50
-    })
+      include: [{ model: Client }]
+    }).limit(limit * 1).skip((page - 1) * limit)
     return res.status(200).send({ data: Clients.toJSON(), success: true })
   } catch (error) {
     res.status(500).send({ error: error, success: false, message: 'processing err' })

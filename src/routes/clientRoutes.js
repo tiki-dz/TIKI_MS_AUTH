@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
-const clientController = require('../controllers/client')
-const validationClient = require('../validation/client')
+const clientController = require('../controllers/clientController')
+const validationClient = require('../validation/clientValidation')
 
 const multer = require('multer')
 // const checkifuserexist = require("../utils/checkifuserexist");
