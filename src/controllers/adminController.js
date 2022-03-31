@@ -6,6 +6,19 @@ const { Client } = require('../models')
 const Promise = require('bluebird')
 const bcrypt = Promise.promisifyAll(require('bcrypt-nodejs'))
 const saltRounds = 8
+// ***********************************************************
+const getPagingData = (data, page, limit) => {
+  const { count: totalItems, rows: clients } = data
+  const currentPage = page ? +page : 0
+  const totalPages = Math.ceil(totalItems / limit)
+  return { totalItems, clients, totalPages, currentPage }
+}
+const getPagination = (page, size) => {
+  const limit = size ? +size : 10
+  const offset = page ? page * limit : 0
+  return { limit, offset }
+}
+// ***********************************************************
 
 function login (req, res) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
@@ -218,18 +231,24 @@ async function addClient (req, res) {
 // if data is validated add in database;
 }
 // get all clients
+// the default page is 0 and the default size is 10
 async function findAllClients (req, res) {
   try {
-    const { page = 1, limit = 2 } = req.query
-    const Clients = await User.findAll({
+    const { page, size } = req.query
+    const { limit, offset } = getPagination(page, size)
+    await User.findAndCountAll({
       where: {
         type: 'client'
       },
-      include: [{ model: Client }]
-    }).limit(limit * 1).skip((page - 1) * limit)
-    return res.status(200).send({ data: Clients.toJSON(), success: true })
+      include: [{ model: Client }],
+      limit,
+      offset
+    }).then(data => {
+      const response = getPagingData(data, page, limit)
+      return res.status(200).send({ data: response, success: true })
+    })
   } catch (error) {
-    res.status(500).send({ error: error, success: false, message: 'processing err' })
+    res.status(500).send({ errors: error, success: false, message: 'processing err' })
   }
 }
 // get one client by id
