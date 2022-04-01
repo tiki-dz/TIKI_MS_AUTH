@@ -507,13 +507,13 @@ async function updateimage (req, res) {
     })
     // test the default image and deleting the the previous one
     if (user.profilePicture !== 'ProfileImage/user-default.jpg-1648754555891.jpg') {
-      const filePath = 'Upload/ProfileImage/' + user.profilePicture
+      const filePath = 'Upload/' + user.profilePicture
       fs.unlinkSync(filePath)
     }
     // updating the url in the database
-    user.profilePicture = 'ProfileImage/' + imgUrl
+    user.profilePicture = process.env.UPLOAD_URL + 'ProfileImage/' + imgUrl
     user.save()
-    res.status(200).send({ success: true, message: 'Image saved successfuly' })
+    res.status(200).send({ url: user.profilePicture, success: true, message: 'Image saved successfuly' })
   } catch (error) {
     console.log(error)
     res.status(500).send({ errors: error.message, success: false, message: 'processing err' })
