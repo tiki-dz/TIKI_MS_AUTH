@@ -481,7 +481,7 @@ async function updateClientByToken (req, res) {
     userToUpdate.birthDate = data.birthDate == null ? userToUpdate.birthDate : data.birthDate
     await userToUpdate.save()
     console.log('user id= ' + userToUpdate.idUser + ' has been updated')
-    return res.status(200).send({ data: userToUpdate.toJSON(), success: true, message: 'the client has been updated' })
+    return res.status(200).send({ data: { User: userToUpdate.toJSON() }, success: true, message: 'the client has been updated' })
   } catch (error) {
     console.log(error)
     res.status(500).send({ errors: errors, success: false, message: 'processing err' })
