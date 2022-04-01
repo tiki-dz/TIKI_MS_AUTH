@@ -43,8 +43,7 @@ exports.validate = (method) => {
           .isLength({ min: 3 })
           .optional({ nullable: true }),
         body('phoneNumber', 'PhoneNumber Invalid value min and max length 10').isNumeric().isLength({ min: 10, max: 10 }).optional({ nullable: true }),
-        body('sexe').isIn(['Homme', 'Femme']).optional({ nullable: true }),
-        body('birthDate').isDate().optional({ nullable: true })
+        body('sexe').isIn(['Homme', 'Femme']).optional({ nullable: true })
       ]
     };
     case 'verifyCode': {
