@@ -55,7 +55,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DATEONLY,
       allowNull: false
     }
-
   }, {
     classMethods: {
       associate: function (models) {
