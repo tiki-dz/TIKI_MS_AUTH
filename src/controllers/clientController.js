@@ -474,17 +474,16 @@ async function updateClientByToken (req, res) {
         AccountEmail: decodedToken.email
       }
     })
-    userToUpdate.firstName = data.firstName
-    userToUpdate.lastName = data.lastName
-    userToUpdate.city = data.city
-    userToUpdate.type = 'client'
-    userToUpdate.phoneNumber = data.phoneNumber
-    userToUpdate.sexe = data.sexe === 'Homme' ? 1 : 0
-    userToUpdate.birthDate = data.birthDate
+    userToUpdate.firstName = data.firstName == null ? userToUpdate.firstName : data.firstName
+    userToUpdate.lastName = data.lastName == null ? userToUpdate.lastName : data.lastName
+    userToUpdate.city = data.city == null ? userToUpdate.city : data.city
+    userToUpdate.phoneNumber = data.phoneNumber == null ? userToUpdate.phoneNumber : data.phoneNumber
+    userToUpdate.birthDate = data.birthDate == null ? userToUpdate.birthDate : data.birthDate
     await userToUpdate.save()
     console.log('user id= ' + userToUpdate.idUser + ' has been updated')
     return res.status(200).send({ data: userToUpdate.toJSON(), success: true, message: 'the client has been updated' })
   } catch (error) {
+    console.log(error)
     res.status(500).send({ errors: errors, success: false, message: 'processing err' })
   }
 }
@@ -506,7 +505,7 @@ async function updateimage (req, res) {
       }
     })
     // test the default image and deleting the the previous one
-    if (user.profilePicture !== 'ProfileImage/user-default.jpg-1648754555891.jpg') {
+    if (user.profilePicture !== (process.env.UPLOAD_URL + 'ProfileImage/user-default.jpg-1648754555891.jpg')) {
       const filePath = 'Upload/' + user.profilePicture
       if (user.profilePicture !== null) {
         fs.unlinkSync(filePath)
