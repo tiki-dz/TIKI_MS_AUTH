@@ -508,7 +508,9 @@ async function updateimage (req, res) {
     // test the default image and deleting the the previous one
     if (user.profilePicture !== 'ProfileImage/user-default.jpg-1648754555891.jpg') {
       const filePath = 'Upload/' + user.profilePicture
-      fs.unlinkSync(filePath)
+      if (user.profilePicture !== null) {
+        fs.unlinkSync(filePath)
+      }
     }
     // updating the url in the database
     user.profilePicture = process.env.UPLOAD_URL + 'ProfileImage/' + imgUrl
