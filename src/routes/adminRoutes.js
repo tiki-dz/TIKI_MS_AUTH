@@ -26,4 +26,7 @@ router.put('/client/:id/activate', validationAdministrator.validate('activate'),
 // deactivate client
 router.put('/client/:id/deactivate', validationAdministrator.validate('deactivate'), adminController.deactivateClient)
 
+// add new admin
+router.post('/admin', validationAdministrator.validate('addClient'), adminController.addAdmin)
+
 module.exports = router

@@ -365,4 +365,70 @@ async function deactivateClient (req, res) {
   }
 }
 
-module.exports = { login, signup, profile, addClient, findAllClients, findClientById, deactivateClient, activateClient }
+// adding one client
+async function addAdmin (req, res) {
+  // check id data is validated
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+    return
+  }
+  try {
+    const userToAdd = req.body
+    const userExist = await Account.findOne({
+      where: {
+        email: userToAdd.email
+      }
+    })
+    if (!userExist) {
+      bcrypt.genSalt(saltRounds, function (err, salt) {
+        if (err) {
+          console.log('error in bcrypt.genSalt')
+          res.status(422).json({ errors: err, success: false, message: 'error in bcrypt.genSalt' })
+        } else {
+          bcrypt.hash(userToAdd.password, salt, null, async function (err, hash) {
+            if (err) {
+              console.log('error in bcrypt.hash')
+              res.status(422).json({ errors: err, success: false, message: 'error in bcrypt.hash' })
+              return res.status(500).send('err in bcrypt')
+            } else {
+              console.log(hash)
+              // todo
+              // new err controle (ali) for multipal creation
+              const newAccount = await Account.create({
+                email: userToAdd.email,
+                password: hash,
+                state: 1
+              })
+              const newUser = await User.create({
+                firstName: userToAdd.firstName,
+                lastName: userToAdd.lastName,
+                city: userToAdd.city,
+                // profile: 'ProfileImage/user-default.jpg-1648754555891.jpg',
+                type: 'admin',
+                phoneNumber: userToAdd.phoneNumber,
+                sexe: userToAdd.sexe === 'Homme' ? 1 : 0,
+                birthDate: userToAdd.birthDate,
+                AccountEmail: newAccount.dataValues.email
+              })
+              const newAdmin = await Administrator.create({
+                role: 'admin',
+                UserIdUser: newUser.dataValues.idUser
+              })
+              console.log('new user ID:', newUser, newAdmin)
+              return res.status(200).send({ data: newUser.toJSON(), success: true, message: 'the client has been added' })
+            }
+          })
+        }
+      })
+    } else {
+      res.status(409).send({ error: 'This email is already in use.' })
+    }
+  } catch (e) {
+    res.status(500).send({ error: e, success: false, message: 'processing err' })
+  }
+
+// if data is validated add in database;
+}
+
+module.exports = { login, signup, profile, addClient, findAllClients, findClientById, deactivateClient, activateClient, addAdmin }
