@@ -1,15 +1,73 @@
 require('dotenv').config()
 const { validationResult } = require('express-validator/check')
-const { User } = require('../models')
-const { Account } = require('../models')
-// const { Client } = require('../models')
+const { Account, User, Partner, Cinema, Stadium, Other, Theatre, UserPartnerInvalid } = require('../models')
 const fs = require('fs')
 const nodemailer = require('nodemailer')
 const ejs = require('ejs')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const config = process.env
-
+function resetPassword (req, res, next) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json(
+      { errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  const token = req.headers['x-access-token']
+  const decodedToken = jwt.verify(token, process.env.JWT_AUTHPARTNER_KEY)
+  Account.findOne({
+    where: {
+      email: decodedToken.email
+    },
+    attributes: ['email', 'password', 'state']
+  }).then(function (account) {
+    console.log(account)
+    if (account === null) {
+      return res.status(404).json({
+        success: false,
+        message: 'Account don"t exist',
+        errors: ['account d"ont exist']
+      })
+    }
+    // eslint-disable-next-line node/handle-callback-err
+    bcrypt.compare(req.body.password, account.password, (err, data) => {
+      if (err) {
+        return res.status(500).json({
+          success: false,
+          message: 'decode password error',
+          errors: [err]
+        })
+      }
+      if (!data) {
+        return res.status(401).json({
+          success: false,
+          message: 'invalid credentials',
+          errors: ['invalid credentials']
+        })
+      }
+      bcrypt.hash(req.body.newPassword, 10, function (err, hash) {
+        if (err) {
+          return res.status(500).json({
+            success: false,
+            message: 'Hash error',
+            errors: ['internal server error']
+          })
+        }
+        account.update(
+          {
+            password: hash
+          }
+        ).then((data) => {
+          return res.status(200).send({
+            message: 'password updated successfully',
+            data: null,
+            success: true
+          })
+        })
+      })
+      // password are same
+    })
+  })
+}
 function login (req, res, next) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
@@ -23,7 +81,7 @@ function login (req, res, next) {
       },
       attributes: ['email', 'password', 'state'],
       include: [
-        { model: User, attributes: ['type', 'phoneNumber', 'sexe', 'profilePicture', 'lastName', 'firstName', 'AccountEmail', 'city'] }
+        { model: User, attributes: ['type', 'idUser', 'phoneNumber', 'sexe', 'profilePicture', 'lastName', 'firstName', 'AccountEmail', 'city'] }
       ]
     }).then(function (account) {
     // check the password
@@ -43,7 +101,7 @@ function login (req, res, next) {
             errors: ['invalid credentials']
           })
         }
-        if (account.User.type !== 'client') {
+        if (account.User.type !== 'partner') {
           return res.status(401).json({
             success: false,
             message: 'not authorized',
@@ -64,20 +122,25 @@ function login (req, res, next) {
             errors: ['your account is desactivated by admin']
           })
         }
-        const token = jwt.sign({ email: req.body.email }, process.env.JWT_AUTH_KEY, {
+        const token = jwt.sign({ email: req.body.email }, process.env.JWT_AUTHPARTNER_KEY, {
           expiresIn: '30d'
         })
         // delete sensitive data
         account.password = undefined
         account.createdAt = undefined
         account.updatedAt = undefined
-        return res.status(200).send({
-          message: 'success',
-          data: {
-            token: token,
-            account: account
-          },
-          success: true
+        Partner.findOne({
+          UserIdUser: account.User.idUser
+        }).then((partner) => {
+          return res.status(200).send({
+            message: 'success',
+            data: {
+              token: token,
+              account: account,
+              partner: partner
+            },
+            success: true
+          })
         })
       })
     })
@@ -91,10 +154,11 @@ function login (req, res, next) {
 function verifyCode (req, res, next) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
+    console.log('ow')
     return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
   }
   try {
-    const decodedToken = jwt.verify(req.headers['x-access-token'], process.env.JWT_NOTAUTH_KEY)
+    const decodedToken = jwt.verify(req.headers['x-access-token'], process.env.JWT_NOTAUTHPARTNER_KEY)
     // eslint-disable-next-line node/handle-callback-err
     bcrypt.compare(req.body.code, decodedToken.code, (err, data) => {
       if (!data || decodedToken.email !== req.body.email) {
@@ -105,24 +169,59 @@ function verifyCode (req, res, next) {
         })
       }
       if (decodedToken.email === req.body.email) {
-        Account.findOne({
+        UserPartnerInvalid.findOne({
           where: {
             email: req.body.email
           }
-        }).then(function (account) {
-          if (account.state === 2) {
-            return res.status(409).send({
-              message: 'your account is desativated by admin',
-              errors: ['your account is desactivated by admin'],
-              success: false
-            })
-          }
-          if (account) {
-            account.update({
-              state: 1
-            })
-              .then(function (account) {
-                const Authtoken = jwt.sign({ email: req.body.email }, process.env.JWT_AUTH_KEY, {
+        }).then(function (accountV) {
+          Account.create({
+            email: accountV.email,
+            password: accountV.password,
+            state: 1
+          }).then((account, err) => {
+            User.create({
+              AccountEmail: accountV.email,
+              firstName: accountV.firstName,
+              lastName: accountV.lastName,
+              birthDate: accountV.birthDate,
+              type: 'partner',
+              city: accountV.city,
+              sexe: accountV.sexe === 'Homme' ? 1 : 0,
+              phoneNumber: '0' + accountV.phoneNumber
+            }).then((user) => {
+              Partner.create({
+                orgaName: accountV.orgaName,
+                orgaDesc: accountV.orgaDesc,
+                orgaType: accountV.orgaType,
+                orgaAddress: accountV.orgaAddress,
+                UserIdUser: user.idUser
+              }).then((partner) => {
+                if (partner.orgaType === 'Cinema') {
+                  Cinema.create({
+                    PartnerIdPartner: partner.idPartner
+                  })
+                } else if (partner.orgaType === 'Stadium') {
+                  Stadium.create({
+                    PartnerIdPartner: partner.idPartner,
+                    capacity: 0
+                  })
+                } else if (partner.orgaType === 'Theatre') {
+                  Theatre.create({
+                    PartnerIdPartner: partner.idPartner,
+                    capacity: 0
+                  })
+                } else {
+                  Other.create({
+                    PartnerIdPartner: partner.idPartner,
+                    capacity: 0
+                  })
+                }
+                UserPartnerInvalid.destroy({
+                  where: {
+                    email: req.body.email
+                  }
+                })
+                const Authtoken = jwt.sign({ email: req.body.email }, process.env.JWT_AUTHPARTNER_KEY, {
                   expiresIn: '30d'
                 })
                 res.status(200).send({
@@ -131,7 +230,8 @@ function verifyCode (req, res, next) {
                   message: 'User authenficated succefully'
                 })
               })
-          }
+            })
+          })
         })
       } else {
         res.status(400).json({
@@ -176,26 +276,32 @@ function signup (req, res, next) {
               errors: ['internal server error']
             })
           }
-          Account.create({
-            email: req.body.email,
-            password: hash,
-            state: 0
-          }).then((account, err) => {
-            User.create({
-              AccountEmail: req.body.email,
+          UserPartnerInvalid.destroy({
+            where: {
+              email: req.body.email
+            }
+          }).then((user) => {
+            UserPartnerInvalid.create({
+              email: req.body.email,
               firstName: req.body.firstName,
               lastName: req.body.lastName,
               birthDate: req.body.birthDate,
-              type: 'client',
+              profilePicture: (process.env.UPLOAD_URL + 'ProfileImage/user-default.jpg-1648754555891.jpg'),
+              type: 'partner',
               city: req.body.city,
               sexe: req.body.sexe === 'Homme' ? 1 : 0,
-              phoneNumber: req.body.phoneNumber
+              phoneNumber: req.body.phoneNumber,
+              orgaName: req.body.orgaName,
+              orgaDesc: req.body.orgaDesc,
+              orgaType: req.body.orgaType,
+              orgaAddress: req.body.orgaAddress,
+              password: hash
             }).then((user) => {
               const codeSended = Math.round(Math.random() * (999999 - 100000) + 100000)
               // eslint-disable-next-line node/handle-callback-err
               bcrypt.hash(codeSended.toString(), 10, function (err, hash) {
-                const token = jwt.sign({ email: req.body.email, code: hash }, process.env.JWT_NOTAUTH_KEY, {
-                  expiresIn: 60
+                const token = jwt.sign({ email: req.body.email, code: hash }, process.env.JWT_NOTAUTHPARTNER_KEY, {
+                  expiresIn: 600000
                 })
                 sendClientActivationEmail(req.body.email, codeSended)
                 return res.status(200).json({
@@ -203,7 +309,7 @@ function signup (req, res, next) {
                     token: token
                   },
                   success: true,
-                  message: 'User created successfuly Please check your email to activate your account'
+                  message: 'Partner created successfuly Please check your email to activate your account'
                 })
               })
             })
@@ -253,14 +359,25 @@ function profile (req, res) {
   }
   try {
     const token = req.headers['x-access-token']
-    const decodedToken = jwt.verify(token, process.env.JWT_AUTH_KEY)
+    const decodedToken = jwt.verify(token, process.env.JWT_AUTHPARTNER_KEY)
     User.findOne({
       where: {
         AccountEmail: decodedToken.email
       },
       attributes: ['firstName', 'profilePicture', 'lastName', 'city', 'phoneNumber', 'sexe', 'birthDate', 'AccountEmail']
     }).then(function (user) {
-      return res.status(200).json({ data: user, success: true, message: 'success' })
+      Partner.findOne({
+        UserIdUser: user.idUser
+      }).then((partner) => {
+        return res.status(200).send({
+          message: 'success',
+          data: {
+            account: user,
+            partner: partner
+          },
+          success: true
+        })
+      })
     })
   } catch (err) {
     return res.status(500).json({
@@ -280,14 +397,11 @@ function resendVerficationCode (req, res) {
     })
   }
   try {
-    Account.findOne({
+    UserPartnerInvalid.findOne({
       where: {
         email: req.body.email
       },
-      attributes: ['email', 'password', 'state'],
-      include: [
-        { model: User, attributes: ['type'] }
-      ]
+      attributes: ['email', 'password']
     }).then(function (account) {
     // check the password
       console.log(account)
@@ -307,27 +421,6 @@ function resendVerficationCode (req, res) {
             errors: ['Invalid credentials']
           })
         }
-        if (account.User.type !== 'client') {
-          return res.status(401).json({
-            message: 'Unauthorized',
-            success: false,
-            errors: ['Unauthorized']
-          })
-        }
-        if (account.state === 1) {
-          return res.status(200).json({
-            message: 'your account is already activated',
-            success: false,
-            errors: ['your account is already activated']
-          })
-        }
-        if (account.state === 2) {
-          return res.status(403).json({
-            message: 'your account is desactivated by admin',
-            success: false,
-            errors: ['your account is desactivated by admin']
-          })
-        }
         const codeSended = Math.round(Math.random() * (999999 - 100000) + 100000)
         bcrypt.hash(codeSended.toString(), 10, function (err, hash) {
           if (err) {
@@ -338,7 +431,7 @@ function resendVerficationCode (req, res) {
               errors: ['internal server error']
             })
           }
-          const token = jwt.sign({ email: req.body.email, code: hash }, process.env.JWT_NOTAUTH_KEY, {
+          const token = jwt.sign({ email: req.body.email, code: hash }, process.env.JWT_NOTAUTHPARTNER_KEY, {
             expiresIn: 60
           })
           sendClientActivationEmail(req.body.email, codeSended)
@@ -360,146 +453,4 @@ function resendVerficationCode (req, res) {
   }
 }
 
-// ****************************************************************************************************
-// deleting an client with id
-async function deleteById (req, res) {
-  // check id data is validated
-  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
-  }
-
-  try {
-    const token = req.headers['x-access-token']
-    const decodedToken = jwt.verify(token, config.JWT_AUTH_KEY)
-    console.log('deleting Client with email = ', decodedToken.email)
-
-    const account = await Account.findOne({
-      where: {
-        email: decodedToken.email
-      }
-    })
-    account.state = 10
-    account.save()
-    return res.status(200).send('deleting the user')
-  } catch (error) {
-    res.status(400).send(error)
-  }
-}
-// updating an client with id
-async function updateById (req, res) {
-  // check the authentification token
-  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
-  }
-  // check id data is validated
-  const DATAerrors = validationResult(req) // Finds the validation DATAerrors in this request and wraps them in an object with handy functions
-  if (!DATAerrors.isEmpty()) {
-    res.status(422).json({ DATAerrors: DATAerrors.array() })
-    return
-  }
-  try {
-    const token = req.headers['x-access-token']
-    const decodedToken = jwt.verify(token, config.JWT_AUTH_KEY)
-    // const id = parseInt(req.params.id)
-    const data = req.body
-    // const userId = await Client.findOne({
-    //   where: {
-    //     idClient: decodedToken.email
-    //   },
-    //   attributes: ['idUser']
-    // })
-    // console.log(userId)
-
-    const userToUpdate = await User.findOne({
-      where: {
-        AccountEmail: decodedToken.email
-      }
-    })
-    userToUpdate.firstName = data.firstName
-    userToUpdate.lastName = data.lastName
-    userToUpdate.city = data.city
-    userToUpdate.type = 'client'
-    userToUpdate.phoneNumber = data.phoneNumber
-    userToUpdate.sexe = data.sexe === 'Homme' ? 1 : 0
-    userToUpdate.birthDate = data.birthDate
-    await userToUpdate.save()
-    console.log(userToUpdate)
-    return res.status(200).send({ userUpdated: userToUpdate.toJSON() })
-  } catch (error) {
-    res.status(400).send(error)
-  }
-}
-// updating profil image client with id
-async function updateimage (req, res) {
-  // check the authentification token
-  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
-  }
-
-  try {
-    const token = req.headers['x-access-token']
-    const decodedToken = jwt.verify(token, config.JWT_AUTH_KEY)
-    const img = req.file.buffer.toString('base64')
-    const user = await User.findOne({
-      where: {
-        AccountEmail: decodedToken.email
-      }
-    })
-    user.profilePicture = img
-    user.save()
-    res.status(200).send('saved successfuly')
-  } catch (error) {
-    res.status(400).send(error)
-  }
-}
-
-// check the authentification token
-function passwordVerify (req, res, next) {
-  // check id data is validated
-  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
-  }
-  try {
-    Account.findOne({
-      where: {
-        email: req.body.email
-      }
-    }).then(function (account) {
-      if (account == null) {
-        return res.status(409).json({
-          success: false,
-          message: 'This user does not exist try to creat account',
-          errors: ['This user does not exist try to creat account']
-        })
-      } else {
-        const codeSended = Math.round(Math.random() * (999999 - 100000) + 100000)
-        // eslint-disable-next-line node/handle-callback-err
-        bcrypt.hash(codeSended.toString(), 10, function (err, hash) {
-          const token = jwt.sign({ email: req.body.email, code: hash }, process.env.JWT_NOTAUTH_KEY, {
-            expiresIn: 60
-          })
-          sendClientActivationEmail(req.body.email, codeSended)
-          return res.status(200).json({
-            data: {
-              token: token
-            },
-            success: true,
-            message: 'Code sent successfuly Please check your email to activate your account'
-          })
-        })
-      }
-    })
-  } catch (err) {
-    return res.status(500).json({
-      message: 'internal server error',
-      success: false,
-      errors: [err]
-    })
-  }
-}
-
-module.exports = { login, signup, verifyCode, profile, resendVerficationCode, deleteById, updateimage, updateById, sendClientActivationEmail, passwordVerify }
+module.exports = { login, resetPassword, signup, verifyCode, profile, resendVerficationCode }
