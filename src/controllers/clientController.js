@@ -275,7 +275,7 @@ function signup (req, res) {
               firstName: req.body.firstName,
               lastName: req.body.lastName,
               birthDate: req.body.birthDate,
-              profilePicture: 'ProfileImage/user-default.jpg-1648754555891.jpg',
+              profilePicture: (process.env.UPLOAD_URL + 'ProfileImage/user-default.jpg-1648754555891.jpg'),
               type: 'client',
               city: req.body.city,
               sexe: req.body.sexe === 'Homme' ? 1 : 0,
@@ -506,7 +506,7 @@ async function updateimage (req, res) {
     })
     // test the default image and deleting the the previous one
     if (user.profilePicture !== (process.env.UPLOAD_URL + 'ProfileImage/user-default.jpg-1648754555891.jpg')) {
-      const filePath = 'Upload/' + user.profilePicture
+      const filePath = user.profilePicture.replace(process.env.UPLOAD_URL, '')
       if (user.profilePicture !== null) {
         fs.unlinkSync(filePath)
       }
