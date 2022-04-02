@@ -30,18 +30,20 @@ exports.validate = (method) => {
         body('firstName')
           .matches(/^[A-Za-z\s]+$/)
           .withMessage('Name must be alphabetic.')
-          .isLength({ min: 3 }),
+          .isLength({ min: 3 })
+          .optional({ nullable: true }),
         body('lastName')
           .matches(/^[A-Za-z\s]+$/)
           .withMessage('lastname must be alphabetic.')
-          .isLength({ min: 3 }),
+          .isLength({ min: 3 })
+          .optional({ nullable: true }),
         body('city')
           .matches(/^[A-Za-z\s]+$/)
           .withMessage('city must be alphabetic.')
-          .isLength({ min: 3 }),
-        body('phoneNumber').isNumeric().isLength({ min: 9 }),
-        body('sexe').isIn(['Homme', 'Femme']),
-        body('birthDate').isDate()
+          .isLength({ min: 3 })
+          .optional({ nullable: true }),
+        body('phoneNumber', 'PhoneNumber Invalid value min and max length 10').isNumeric().isLength({ min: 10, max: 10 }).optional({ nullable: true }),
+        body('sexe').isIn(['Homme', 'Femme']).optional({ nullable: true })
       ]
     };
     case 'verifyCode': {
