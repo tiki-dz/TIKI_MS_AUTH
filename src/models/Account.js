@@ -5,14 +5,12 @@ const { Model } = require('sequelize')
 
 function hashPassword (account, options) {
   const saltRounds = 8
-
   return bcrypt.genSalt(saltRounds, function (err, salt) {
     bcrypt.hash(account.password, salt, function (err, hash) {
       account.setDataValue('password', hash)
     })
   })
 }
-
 module.exports = (sequelize, DataTypes) => {
   const acc = sequelize.define(
     'Account',
