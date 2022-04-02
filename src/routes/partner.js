@@ -10,8 +10,8 @@ router.post('/signup',
   partnerController.signup
 )
 router.post('/verifyCode',
-  verifyToken,
   validationPartner.validate('verifyCode'),
+  verifyToken,
   partnerController.verifyCode
 )
 // router.post('/login', validationPartner.validate('login'), partnerController.login)

@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken')
-const { Account } = require('../models')
+const { UserPartnerInvalid } = require('../models')
 const config = process.env
 const verifyToken = (req, res, next) => {
   const token = req.headers['x-access-token']
@@ -13,7 +13,7 @@ const verifyToken = (req, res, next) => {
   }
   try {
     const decodedToken = jwt.verify(token, config.JWT_NOTAUTHPARTNER_KEY)
-    Account.findOne({
+    UserPartnerInvalid.findOne({
       where: {
         email: decodedToken.email
       }
@@ -23,14 +23,6 @@ const verifyToken = (req, res, next) => {
           success: false,
           message: 'account d"ont exist',
           errors: ['Account d"ont exist']
-        }
-        )
-      }
-      if (account.state === 2) {
-        return res.status(401).send({
-          success: false,
-          message: 'Unauthorized',
-          errors: ['your account is desactivated']
         }
         )
       }
