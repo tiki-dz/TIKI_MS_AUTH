@@ -1,6 +1,6 @@
 require('dotenv').config()
 const { validationResult } = require('express-validator/check')
-const { Account, User, Partner, Other, Stadium, Cinema, Theatre } = require('../models')
+const { Account, User, Partner, Cinema, Stadium, Other, Theatre, UserPartnerInvalid } = require('../models')
 const fs = require('fs')
 const nodemailer = require('nodemailer')
 const ejs = require('ejs')
@@ -154,6 +154,7 @@ function login (req, res, next) {
 function verifyCode (req, res, next) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
+    console.log('ow')
     return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
   }
   try {
@@ -168,23 +169,58 @@ function verifyCode (req, res, next) {
         })
       }
       if (decodedToken.email === req.body.email) {
-        Account.findOne({
+        UserPartnerInvalid.findOne({
           where: {
             email: req.body.email
           }
-        }).then(function (account) {
-          if (account.state === 2) {
-            return res.status(409).send({
-              message: 'your account is desativated by admin',
-              errors: ['your account is desactivated by admin'],
-              success: false
-            })
-          }
-          if (account) {
-            account.update({
-              state: 1
-            })
-              .then(function (account) {
+        }).then(function (accountV) {
+          Account.create({
+            email: accountV.email,
+            password: accountV.password,
+            state: 1
+          }).then((account, err) => {
+            User.create({
+              AccountEmail: accountV.email,
+              firstName: accountV.firstName,
+              lastName: accountV.lastName,
+              birthDate: accountV.birthDate,
+              type: 'partner',
+              city: accountV.city,
+              sexe: accountV.sexe === 'Homme' ? 1 : 0,
+              phoneNumber: '0' + accountV.phoneNumber
+            }).then((user) => {
+              Partner.create({
+                orgaName: accountV.orgaName,
+                orgaDesc: accountV.orgaDesc,
+                orgaType: accountV.orgaType,
+                orgaAddress: accountV.orgaAddress,
+                UserIdUser: user.idUser
+              }).then((partner) => {
+                if (partner.orgaType === 'Cinema') {
+                  Cinema.create({
+                    PartnerIdPartner: partner.idPartner
+                  })
+                } else if (partner.orgaType === 'Stadium') {
+                  Stadium.create({
+                    PartnerIdPartner: partner.idPartner,
+                    capacity: 0
+                  })
+                } else if (partner.orgaType === 'Theatre') {
+                  Theatre.create({
+                    PartnerIdPartner: partner.idPartner,
+                    capacity: 0
+                  })
+                } else {
+                  Other.create({
+                    PartnerIdPartner: partner.idPartner,
+                    capacity: 0
+                  })
+                }
+                UserPartnerInvalid.destroy({
+                  where: {
+                    email: req.body.email
+                  }
+                })
                 const Authtoken = jwt.sign({ email: req.body.email }, process.env.JWT_AUTHPARTNER_KEY, {
                   expiresIn: '30d'
                 })
@@ -194,7 +230,8 @@ function verifyCode (req, res, next) {
                   message: 'User authenficated succefully'
                 })
               })
-          }
+            })
+          })
         })
       } else {
         res.status(400).json({
@@ -239,13 +276,13 @@ function signup (req, res, next) {
               errors: ['internal server error']
             })
           }
-          Account.create({
-            email: req.body.email,
-            password: hash,
-            state: 0
-          }).then((account, err) => {
-            User.create({
-              AccountEmail: req.body.email,
+          UserPartnerInvalid.destroy({
+            where: {
+              email: req.body.email
+            }
+          }).then((user) => {
+            UserPartnerInvalid.create({
+              email: req.body.email,
               firstName: req.body.firstName,
               lastName: req.body.lastName,
               birthDate: req.body.birthDate,
@@ -253,49 +290,26 @@ function signup (req, res, next) {
               type: 'partner',
               city: req.body.city,
               sexe: req.body.sexe === 'Homme' ? 1 : 0,
-              phoneNumber: req.body.phoneNumber
+              phoneNumber: req.body.phoneNumber,
+              orgaName: req.body.orgaName,
+              orgaDesc: req.body.orgaDesc,
+              orgaType: req.body.orgaType,
+              orgaAddress: req.body.orgaAddress,
+              password: hash
             }).then((user) => {
-              Partner.create({
-                type: req.body.type,
-                orgaName: req.body.orgaName,
-                orgaDesc: req.body.orgaDesc,
-                orgaType: req.body.orgaType,
-                orgaAddress: req.body.orgaAddress
-              }).then((partner) => {
-                if (partner.orgaType === 'Other') {
-                  Other.create({
-                    PartnerIdPartner: partner.idPartner
-                  })
-                } else if (partner.orgaType === 'Stadium') {
-                  Stadium.create({
-                    PartnerIdPartner: partner.idPartner,
-                    capacity: req.body.capacity
-                  })
-                } else if (partner.orgaType === 'Cinema') {
-                  Cinema.create({
-                    PartnerIdPartner: partner.idPartner,
-                    capacity: req.body.capacity
-                  })
-                } else if (partner.orgaType === 'Theatre') {
-                  Theatre.create({
-                    PartnerIdPartner: partner.idPartner,
-                    capacity: req.body.capacity
-                  })
-                }
-                const codeSended = Math.round(Math.random() * (999999 - 100000) + 100000)
-                // eslint-disable-next-line node/handle-callback-err
-                bcrypt.hash(codeSended.toString(), 10, function (err, hash) {
-                  const token = jwt.sign({ email: req.body.email, code: hash }, process.env.JWT_NOTAUTHPARTNER_KEY, {
-                    expiresIn: 60
-                  })
-                  sendClientActivationEmail(req.body.email, codeSended)
-                  return res.status(200).json({
-                    data: {
-                      token: token
-                    },
-                    success: true,
-                    message: 'Partner created successfuly Please check your email to activate your account'
-                  })
+              const codeSended = Math.round(Math.random() * (999999 - 100000) + 100000)
+              // eslint-disable-next-line node/handle-callback-err
+              bcrypt.hash(codeSended.toString(), 10, function (err, hash) {
+                const token = jwt.sign({ email: req.body.email, code: hash }, process.env.JWT_NOTAUTHPARTNER_KEY, {
+                  expiresIn: 600000
+                })
+                sendClientActivationEmail(req.body.email, codeSended)
+                return res.status(200).json({
+                  data: {
+                    token: token
+                  },
+                  success: true,
+                  message: 'Partner created successfuly Please check your email to activate your account'
                 })
               })
             })
@@ -383,14 +397,11 @@ function resendVerficationCode (req, res) {
     })
   }
   try {
-    Account.findOne({
+    UserPartnerInvalid.findOne({
       where: {
         email: req.body.email
       },
-      attributes: ['email', 'password', 'state'],
-      include: [
-        { model: User, attributes: ['type'] }
-      ]
+      attributes: ['email', 'password']
     }).then(function (account) {
     // check the password
       console.log(account)
@@ -408,27 +419,6 @@ function resendVerficationCode (req, res) {
             message: 'Invalid credentials',
             success: false,
             errors: ['Invalid credentials']
-          })
-        }
-        if (account.User.type !== 'client') {
-          return res.status(401).json({
-            message: 'Unauthorized',
-            success: false,
-            errors: ['Unauthorized']
-          })
-        }
-        if (account.state === 1) {
-          return res.status(200).json({
-            message: 'your account is already activated',
-            success: false,
-            errors: ['your account is already activated']
-          })
-        }
-        if (account.state === 2) {
-          return res.status(403).json({
-            message: 'your account is desactivated by admin',
-            success: false,
-            errors: ['your account is desactivated by admin']
           })
         }
         const codeSended = Math.round(Math.random() * (999999 - 100000) + 100000)

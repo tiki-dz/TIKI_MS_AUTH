@@ -182,10 +182,10 @@ function verifyCode (req, res) {
               firstName: invalidUser.firstName,
               lastName: invalidUser.lastName,
               birthDate: invalidUser.birthDate,
+              phoneNumber: '0' + invalidUser.phoneNumber,
               type: 'client',
               city: invalidUser.city,
-              sexe: invalidUser.sexe === 'Homme' ? 1 : 0,
-              phoneNumber: req.body.phoneNumber
+              sexe: invalidUser.sexe === 'Homme' ? 1 : 0
             }).then((user) => {
               Client.create({
                 UserIdUser: user.idUser
@@ -236,7 +236,8 @@ function verifyCode (req, res) {
     })
   }
 }
-function signup (req, res) {
+
+function signup (req, res, next) {
   // check id data is validated
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {

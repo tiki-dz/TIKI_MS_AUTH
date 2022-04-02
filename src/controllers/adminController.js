@@ -44,7 +44,7 @@ function login (req, res) {
         if (!data) {
           return res.status(401).json({ success: false, message: 'invalid credential', errors: ['Invalid credentials'] })
         }
-        if (account.User.type !== 'admin') {
+        if (account.User.type !== 'admin' && account.User.type !== 'superadmin') {
           return res.status(401).json({ success: false, message: 'invalid credential', errors: ['Unauthorized'] })
         }
         if (account.state === 0) {
@@ -112,7 +112,7 @@ function signup (req, res) {
             state: 1
           }).then((account, err) => {
             if (err) {
-              Account.destroy({ where: { email: req.body.email } })
+              // Account.destroy({ where: { email: req.body.email } })
               return res.status(500).json({
                 success: false,
                 message: 'internal server error',
