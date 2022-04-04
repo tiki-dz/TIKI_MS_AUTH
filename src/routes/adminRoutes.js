@@ -13,20 +13,20 @@ router.get('/profile', verifyToken, adminController.profile)
 // *************************************************************************
 
 // get all clients
-router.get('/client', adminController.findAllClients)
+router.get('/client', verifyToken, adminController.findAllClients)
 // get one client by id
-router.get('/client/:id', adminController.findClientById)
+router.get('/client/:id', verifyToken, adminController.findClientById)
 // add new client
-router.post('/client', validationAdministrator.validate('addClient'), adminController.addClient)
+router.post('/client', validationAdministrator.validate('addClient'), verifyToken, adminController.addClient)
 
 // *************************************************************************
 
 // activate client
-router.put('/client/:id/activate', validationAdministrator.validate('activate'), adminController.activateClient)
+router.put('/client/:id/activate', validationAdministrator.validate('activate'), verifyToken, adminController.activateClient)
 // deactivate client
-router.put('/client/:id/deactivate', validationAdministrator.validate('deactivate'), adminController.deactivateClient)
+router.put('/client/:id/deactivate', validationAdministrator.validate('deactivate'), verifyToken, adminController.deactivateClient)
 
 // add new admin
-router.post('/admin', validationAdministrator.validate('addClient'), adminController.addAdmin)
+router.post('/admin', validationAdministrator.validate('addClient'), verifyToken, adminController.addAdmin)
 
 module.exports = router
