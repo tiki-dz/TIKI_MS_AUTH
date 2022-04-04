@@ -96,35 +96,32 @@ async function activateClient (req, res) {
   if (!errors.isEmpty()) {
     return res.status(422).json({ errors: errors.array() })
   } try {
-    const id = parseInt(req.params.id)
-    const client = await Client.findOne({
-      where: {
-        idClient: id
-      }
-    })
-    const user = await User.findOne({
-      where: {
-        idUser: client.dataValues.UserIdUser
-      }
-    })
+    const email = req.body.email
     const account = await Account.findOne({
       where: {
-        email: user.dataValues.AccountEmail
+        email: email
       }
     })
     let message = 'Account activated successfuly'
-    if (account.state !== 1) {
-      account.update({
-        state: req.body.state
+    if (account) {
+      if (account.state !== 1) {
+        account.update({
+          state: req.body.state
+        })
+      } else {
+        message = 'already activated user!'
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: message
       })
     } else {
-      message = 'already activated user!'
+      return res.status(404).json({
+        success: false,
+        message: "Account doesn't exist"
+      })
     }
-
-    return res.status(200).json({
-      success: true,
-      message: message
-    })
   } catch (error) {
     res.status(400).send(error)
   }
@@ -134,35 +131,32 @@ async function deactivateClient (req, res) {
   if (!errors.isEmpty()) {
     return res.status(422).json({ errors: errors.array() })
   } try {
-    const id = parseInt(req.params.id)
-    const client = await Client.findOne({
-      where: {
-        idClient: id
-      }
-    })
-    const user = await User.findOne({
-      where: {
-        idUser: client.dataValues.UserIdUser
-      }
-    })
+    const email = req.body.email
     const account = await Account.findOne({
       where: {
-        email: user.dataValues.AccountEmail
+        email: email
       }
     })
     let message = 'Account Deactivated successfuly'
-    if (account.state !== 2) {
-      account.update({
-        state: req.body.state
+    if (account) {
+      if (account.state !== 2) {
+        account.update({
+          state: req.body.state
+        })
+      } else {
+        message = 'already deactivated user!'
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: message
       })
     } else {
-      message = 'already deactivated user!'
+      return res.status(404).json({
+        success: false,
+        message: "Account doesn't exist"
+      })
     }
-
-    return res.status(200).json({
-      success: true,
-      message: message
-    })
   } catch (error) {
     return res.status(400).json({
       success: false,

@@ -1,5 +1,4 @@
 const { body } = require('express-validator/check')
-const { param } = require('express-validator/check')
 
 exports.validate = (method) => {
   switch (method) {
@@ -28,13 +27,13 @@ exports.validate = (method) => {
     case 'activate': {
       return [
         body('state', 'Invalid state').isIn([1]),
-        param('id', 'Id must be a number').isNumeric()
+        body('email', 'Invalid email').isEmail()
       ]
     }
     case 'deactivate': {
       return [
         body('state', 'Invalid state').isIn([2]),
-        param('id', 'Id must be a number').isNumeric()
+        body('email', 'Invalid email').isEmail()
       ]
     }
   }
