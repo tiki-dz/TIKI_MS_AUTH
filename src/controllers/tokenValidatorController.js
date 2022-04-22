@@ -12,7 +12,6 @@ async function TokenCheck (req, res) {
     return
   }
   try {
-    const role = req.headers.role
     const token = req.headers['x-access-token']
     const decodedToken = jwt.verify(token, process.env.JWT_AUTHADMIN_KEY)
     const user = await User.findOne({
@@ -21,19 +20,15 @@ async function TokenCheck (req, res) {
       }
     })
     if (user) {
-      if (role === user.type) {
-        if (role === 'admin') {
-          const admin = await Administrator.findOne({
-            where: {
-              UserIdUser: user.idUser
-            }
-          })
-          res.status(200).send({ data: { message: 'the token is valide', adminId: admin.idAdministrator }, success: true, message: 'success' })
-        } else {
-          res.status(200).send({ data: { message: 'the token is valide' }, success: true, message: 'success' })
-        }
+      if (user.type === 'admin') {
+        const admin = await Administrator.findOne({
+          where: {
+            UserIdUser: user.idUser
+          }
+        })
+        res.status(200).send({ data: { message: 'the token is valide', adminId: admin.idAdministrator }, success: true, message: 'success' })
       } else {
-        res.status(400).send({ error: 'role err', success: false, message: 'processing err' })
+        res.status(200).send({ data: { message: 'the token is valide' }, success: true, message: 'success' })
       }
     } else {
       res.status(400).send({ error: 'user unknown', success: false, message: 'processing err' })
