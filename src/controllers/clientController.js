@@ -509,7 +509,8 @@ async function updateimage (req, res) {
     if (user.profilePicture !== (process.env.UPLOAD_URL + 'ProfileImage/user-default.jpg-1648754555891.jpg')) {
       const filePath = user.profilePicture.replace(process.env.UPLOAD_URL, '')
       if (user.profilePicture !== null) {
-        fs.unlinkSync(filePath)
+        console.log(filePath)
+        fs.unlinkSync('./Upload/' + filePath)
       }
     }
     // updating the url in the database
