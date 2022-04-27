@@ -111,6 +111,7 @@ function signup (req, res) {
             password: hash,
             state: 1
           }).then((account, err) => {
+            console.log(err)
             if (err) {
               // Account.destroy({ where: { email: req.body.email } })
               return res.status(500).json({
