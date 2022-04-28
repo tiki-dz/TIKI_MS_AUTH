@@ -1,8 +1,8 @@
 const express = require('express')
 const router = express.Router()
-const partnerController = require('../controllers/partner')
-const validationPartner = require('../validation/partner')
-const validationClient = require('../validation/client')
+const partnerController = require('../controllers/partnerController')
+const validationPartner = require('../validation/partnerValidation')
+const validationClient = require('../validation/clientValidation')
 const verifyToken = require('../utils/verifyTokenPartner')
 const verifyTokenAuth = require('../utils/verifyTokenAuthPartner')
 router.post('/signup',
@@ -10,8 +10,8 @@ router.post('/signup',
   partnerController.signup
 )
 router.post('/verifyCode',
-  verifyToken,
   validationPartner.validate('verifyCode'),
+  verifyToken,
   partnerController.verifyCode
 )
 // router.post('/login', validationPartner.validate('login'), partnerController.login)
