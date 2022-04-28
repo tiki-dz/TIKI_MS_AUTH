@@ -182,7 +182,6 @@ function verifyCode (req, res) {
               firstName: invalidUser.firstName,
               lastName: invalidUser.lastName,
               birthDate: invalidUser.birthDate,
-              phoneNumber: '0' + invalidUser.phoneNumber,
               type: 'client',
               city: invalidUser.city,
               sexe: invalidUser.sexe === 'Homme' ? 1 : 0
@@ -279,14 +278,13 @@ function signup (req, res, next) {
               profilePicture: (process.env.UPLOAD_URL + 'ProfileImage/user-default.jpg-1648754555891.jpg'),
               type: 'client',
               city: req.body.city,
-              sexe: req.body.sexe === 'Homme' ? 1 : 0,
-              phoneNumber: req.body.phoneNumber
+              sexe: req.body.sexe === 'Homme' ? 1 : 0
             }).then((user) => {
               const codeSended = Math.round(Math.random() * (999999 - 100000) + 100000)
               // eslint-disable-next-line node/handle-callback-err
               bcrypt.hash(codeSended.toString(), 10, function (err, hash) {
                 const token = jwt.sign({ email: req.body.email, code: hash }, process.env.JWT_NOTAUTH_KEY, {
-                  expiresIn: 600000
+                  expiresIn: '300s'
                 })
                 sendClientActivationEmail(req.body.email, codeSended)
                 return res.status(200).json({
@@ -509,7 +507,8 @@ async function updateimage (req, res) {
     if (user.profilePicture !== (process.env.UPLOAD_URL + 'ProfileImage/user-default.jpg-1648754555891.jpg')) {
       const filePath = user.profilePicture.replace(process.env.UPLOAD_URL, '')
       if (user.profilePicture !== null) {
-        fs.unlinkSync(filePath)
+        console.log(filePath)
+        fs.unlinkSync('./Upload/' + filePath)
       }
     }
     // updating the url in the database
