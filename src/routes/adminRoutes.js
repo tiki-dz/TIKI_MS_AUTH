@@ -6,7 +6,7 @@ const validationClient = require('../validation/clientValidation')
 const verifyToken = require('../utils/verifyTokenAuthAdmin')
 const verifyTokenAuthSuperAdmin = require('../utils/verifyTokenAuthSuperAdmin')
 
-router.post('/signup', validationClient.validate('signup'), verifyTokenAuthSuperAdmin, adminController.signup)
+router.post('/signup', verifyTokenAuthSuperAdmin, validationClient.validate('signup'), adminController.signup)
 router.post('/login', validationClient.validate('login'), adminController.login)
 router.get('/profile', verifyToken, adminController.profile)
 

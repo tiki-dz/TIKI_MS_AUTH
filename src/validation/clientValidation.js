@@ -13,6 +13,7 @@ exports.validate = (method) => {
       return [
         body('email', 'Invalid email format').isEmail(),
         body('password', 'Invalid value min length 8').isLength({ min: 8 }),
+        body('phoneNumber', 'Invalid value min length 8').isLength({ min: 10, max: 10 }),
         body('firstName')
           .matches(/^[A-Za-z\s]+$/)
           .withMessage('Name must be alphabetic.')

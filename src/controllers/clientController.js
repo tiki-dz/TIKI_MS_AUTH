@@ -183,6 +183,7 @@ function verifyCode (req, res) {
               lastName: invalidUser.lastName,
               birthDate: invalidUser.birthDate,
               type: 'client',
+              profilePicture: (process.env.UPLOAD_URL + 'ProfileImage/user-default.jpg-1648754555891.jpg'),
               city: invalidUser.city,
               sexe: invalidUser.sexe === 'Homme' ? 1 : 0
             }).then((user) => {
