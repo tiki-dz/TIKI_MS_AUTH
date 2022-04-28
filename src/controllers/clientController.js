@@ -150,7 +150,7 @@ function login (req, res, next) {
     })
   }
 }
-function verifyCode (req, res, next) {
+function verifyCode (req, res) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
     return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
@@ -184,8 +184,7 @@ function verifyCode (req, res, next) {
               birthDate: invalidUser.birthDate,
               type: 'client',
               city: invalidUser.city,
-              sexe: invalidUser.sexe === 'Homme' ? 1 : 0,
-              phoneNumber: req.body.phoneNumber
+              sexe: invalidUser.sexe === 'Homme' ? 1 : 0
             }).then((user) => {
               Client.create({
                 UserIdUser: user.idUser
@@ -236,6 +235,7 @@ function verifyCode (req, res, next) {
     })
   }
 }
+
 function signup (req, res, next) {
   // check id data is validated
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
@@ -275,16 +275,16 @@ function signup (req, res, next) {
               firstName: req.body.firstName,
               lastName: req.body.lastName,
               birthDate: req.body.birthDate,
+              profilePicture: (process.env.UPLOAD_URL + 'ProfileImage/user-default.jpg-1648754555891.jpg'),
               type: 'client',
               city: req.body.city,
-              sexe: req.body.sexe === 'Homme' ? 1 : 0,
-              phoneNumber: req.body.phoneNumber
+              sexe: req.body.sexe === 'Homme' ? 1 : 0
             }).then((user) => {
               const codeSended = Math.round(Math.random() * (999999 - 100000) + 100000)
               // eslint-disable-next-line node/handle-callback-err
               bcrypt.hash(codeSended.toString(), 10, function (err, hash) {
                 const token = jwt.sign({ email: req.body.email, code: hash }, process.env.JWT_NOTAUTH_KEY, {
-                  expiresIn: 600000
+                  expiresIn: '300s'
                 })
                 sendClientActivationEmail(req.body.email, codeSended)
                 return res.status(200).json({
@@ -433,7 +433,7 @@ function resendVerficationCode (req, res) {
 }
 // ****************************************************************************************************
 // deleting an client with id
-async function deleteById (req, res) {
+async function deleteClientByToken (req, res) {
   // check id data is validated
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
@@ -452,54 +452,38 @@ async function deleteById (req, res) {
     })
     account.state = 10
     account.save()
-    return res.status(200).send('deleting the user')
+    return res.status(200).send({ success: true, message: 'deleting the user' })
   } catch (error) {
-    res.status(400).send(error)
+    res.status(400).send({ errors: errors, success: false, message: 'processing err' })
   }
 }
-// updating an client with id
-async function updateById (req, res) {
+// updating an client with token
+async function updateClientByToken (req, res) {
   // check the authentification token
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
     return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
   }
-  // check id data is validated
-  const DATAerrors = validationResult(req) // Finds the validation DATAerrors in this request and wraps them in an object with handy functions
-  if (!DATAerrors.isEmpty()) {
-    res.status(422).json({ DATAerrors: DATAerrors.array() })
-    return
-  }
   try {
     const token = req.headers['x-access-token']
     const decodedToken = jwt.verify(token, config.JWT_AUTH_KEY)
-    // const id = parseInt(req.params.id)
     const data = req.body
-    // const userId = await Client.findOne({
-    //   where: {
-    //     idClient: decodedToken.email
-    //   },
-    //   attributes: ['idUser']
-    // })
-    // console.log(userId)
-
     const userToUpdate = await User.findOne({
       where: {
         AccountEmail: decodedToken.email
       }
     })
-    userToUpdate.firstName = data.firstName
-    userToUpdate.lastName = data.lastName
-    userToUpdate.city = data.city
-    userToUpdate.type = 'client'
-    userToUpdate.phoneNumber = data.phoneNumber
-    userToUpdate.sexe = data.sexe === 'Homme' ? 1 : 0
-    userToUpdate.birthDate = data.birthDate
+    userToUpdate.firstName = data.firstName == null ? userToUpdate.firstName : data.firstName
+    userToUpdate.lastName = data.lastName == null ? userToUpdate.lastName : data.lastName
+    userToUpdate.city = data.city == null ? userToUpdate.city : data.city
+    userToUpdate.phoneNumber = data.phoneNumber == null ? userToUpdate.phoneNumber : data.phoneNumber
+    userToUpdate.birthDate = data.birthDate == null ? userToUpdate.birthDate : data.birthDate
     await userToUpdate.save()
-    console.log(userToUpdate)
-    return res.status(200).send({ userUpdated: userToUpdate.toJSON() })
+    console.log('user id= ' + userToUpdate.idUser + ' has been updated')
+    return res.status(200).send({ data: { User: userToUpdate.toJSON() }, success: true, message: 'the client has been updated' })
   } catch (error) {
-    res.status(400).send(error)
+    console.log(error)
+    res.status(500).send({ errors: errors, success: false, message: 'processing err' })
   }
 }
 // updating profil image client with id
@@ -513,20 +497,29 @@ async function updateimage (req, res) {
   try {
     const token = req.headers['x-access-token']
     const decodedToken = jwt.verify(token, config.JWT_AUTH_KEY)
-    const img = req.file.buffer.toString('base64')
+    const imgUrl = req.file.filename.toString()
     const user = await User.findOne({
       where: {
         AccountEmail: decodedToken.email
       }
     })
-    user.profilePicture = img
+    // test the default image and deleting the the previous one
+    if (user.profilePicture !== (process.env.UPLOAD_URL + 'ProfileImage/user-default.jpg-1648754555891.jpg')) {
+      const filePath = user.profilePicture.replace(process.env.UPLOAD_URL, '')
+      if (user.profilePicture !== null) {
+        console.log(filePath)
+        fs.unlinkSync('./Upload/' + filePath)
+      }
+    }
+    // updating the url in the database
+    user.profilePicture = process.env.UPLOAD_URL + 'ProfileImage/' + imgUrl
     user.save()
-    res.status(200).send('saved successfuly')
+    res.status(200).send({ url: user.profilePicture, success: true, message: 'Image saved successfuly' })
   } catch (error) {
-    res.status(400).send(error)
+    console.log(error)
+    res.status(500).send({ errors: error.message, success: false, message: 'processing err' })
   }
 }
-
 // check the authentification token
 function passwordVerify (req, res, next) {
   // check id data is validated
@@ -573,4 +566,4 @@ function passwordVerify (req, res, next) {
   }
 }
 
-module.exports = { resetPassword, login, signup, verifyCode, profile, resendVerficationCode, deleteById, updateimage, updateById, sendClientActivationEmail, passwordVerify }
+module.exports = { resetPassword, login, signup, verifyCode, profile, resendVerficationCode, deleteClientByToken, updateimage, updateClientByToken, sendClientActivationEmail, passwordVerify }
