@@ -3,8 +3,7 @@ const { validationResult } = require('express-validator/check')
 const { Account, User, Administrator } = require('../models')
 const jwt = require('jsonwebtoken')
 const { Client } = require('../models')
-const Promise = require('bluebird')
-const bcrypt = Promise.promisifyAll(require('bcrypt-nodejs'))
+const bcrypt = require('bcrypt')
 const saltRounds = 8
 // ***********************************************************
 const getPagingData = (data, page, limit) => {
@@ -86,11 +85,13 @@ function signup (req, res) {
       message: 'invalid data'
     })
   } try {
+    console.log('dkhalna  hna')
     Account.findOne({
       where: {
         email: req.body.email
       }
     }).then(function (account) {
+      console.log('dkhalna  hna2')
       if (account != null) {
         return res.status(409).json({
           success: false,
@@ -98,52 +99,63 @@ function signup (req, res) {
           errors: ['account already exist']
         })
       } else {
-        bcrypt.hash(req.body.password, 10, function (err, hash) {
-          if (err) {
-            return res.status(500).json({
-              success: false,
-              message: 'internal server error',
-              errors: ['internal server error']
-            })
-          }
-          Account.create({
-            email: req.body.email,
-            password: hash,
-            state: 1
-          }).then((account, err) => {
+        console.log('dkhalna  hna3')
+        try {
+          bcrypt.hash(req.body.password, 10, function (err, hash) {
+            console.log('dkhalna  hna4')
             console.log(err)
             if (err) {
-              // Account.destroy({ where: { email: req.body.email } })
               return res.status(500).json({
                 success: false,
                 message: 'internal server error',
                 errors: ['internal server error']
               })
             }
-            User.create({
-              AccountEmail: req.body.email,
-              firstName: req.body.firstName,
-              lastName: req.body.lastName,
-              birthDate: req.body.birthDate,
-              profilePicture: (process.env.UPLOAD_URL + 'ProfileImage/user-default.jpg-1648754555891.jpg'),
-              type: 'admin',
-              city: req.body.city,
-              sexe: req.body.sexe === 'Homme' ? 1 : 0,
-              phoneNumber: req.body.phoneNumber
-            }).then((user) => {
-              Administrator.create({
-                role: 'admin',
-                UserIdUser: user.idUser
-              }).then((account) => {
-                return res.status(200).json({
-                  data: null,
-                  success: true,
-                  message: 'Admin created successfuly'
+            Account.create({
+              email: req.body.email,
+              password: hash,
+              state: 1
+            }).then((account, err) => {
+              console.log('here')
+              console.log(err)
+              if (err) {
+              // Account.destroy({ where: { email: req.body.email } })
+                return res.status(500).json({
+                  success: false,
+                  message: 'internal server error',
+                  errors: ['internal server error']
+                })
+              }
+              User.create({
+                AccountEmail: req.body.email,
+                firstName: req.body.firstName,
+                lastName: req.body.lastName,
+                birthDate: req.body.birthDate,
+                profilePicture: (process.env.UPLOAD_URL + 'ProfileImage/user-default.jpg-1648754555891.jpg'),
+                type: 'admin',
+                city: req.body.city,
+                sexe: req.body.sexe === 'Homme' ? 1 : 0,
+                phoneNumber: req.body.phoneNumber
+              }).then((user) => {
+                Administrator.create({
+                  role: 'admin',
+                  UserIdUser: user.idUser
+                }).then((account) => {
+                  return res.status(200).json({
+                    data: null,
+                    success: true,
+                    message: 'Admin created successfuly'
+                  })
                 })
               })
             })
           })
-        })
+        } catch (err) {
+          return res.status(500).json({
+            success: false,
+            errors: [err]
+          })
+        }
       }
     })
   } catch (err) {
