@@ -1,6 +1,6 @@
 /* eslint-disable no-useless-catch */
 /* ----------------------- Message broker ----------------------- */
-// const { amqplib } = require('amqplib')
+
 const { MESSAGE_BROKER_URL, EXCHANGE_NAME } = require('../config/config.js')
 const amqp = require('amqplib/callback_api')
 
@@ -8,17 +8,30 @@ const amqp = require('amqplib/callback_api')
 module.exports.CreatChannel1 = () => {
   amqp.connect(MESSAGE_BROKER_URL, function (error0, connection) {
     if (error0) {
+      console.log(error0)
       throw error0
     }
     connection.createChannel(function (error1, channel) {
       const msg = 'Hello world'
+      const exchange = 'logs'
 
-      channel.assertQueue(EXCHANGE_NAME, {
+      channel.assertExchange(exchange, 'fanout', {
         durable: false
       })
-      channel.sendToQueue(EXCHANGE_NAME, Buffer.from(msg))
+      channel.publish(exchange, '', Buffer.from(msg))
       console.log(' [x] Sent %s', msg)
     })
+
+    //   channel.assertQueue(EXCHANGE_NAME, {
+    //     durable: false
+    //   })
+    //   channel.sendToQueue(EXCHANGE_NAME, Buffer.from(msg), { persistent: true })
+    //   console.log(' [x] Sent %s', msg)
+    // })
+    // setTimeout(function () {
+    //   connection.close()
+    //   // process.exit(0)
+    // }, 500)
   })
 }
 // create a channel
