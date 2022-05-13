@@ -4,6 +4,8 @@ const { Account, User, Administrator } = require('../models')
 const jwt = require('jsonwebtoken')
 const { Client } = require('../models')
 const bcrypt = require('bcrypt')
+const Op = require('Sequelize').Op
+
 const saltRounds = 8
 // ***********************************************************
 const getPagingData = (data, page, limit) => {
@@ -297,24 +299,15 @@ async function findClientById (req, res) {
 }
 // activate client by id
 async function activateClient (req, res) {
-  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  const errors = validationResult(req)
+  console.log(errors) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
     return res.status(422).json({ errors: errors.array() })
   } try {
-    const id = parseInt(req.params.id)
-    const client = await Client.findOne({
-      where: {
-        idClient: id
-      }
-    })
-    const user = await User.findOne({
-      where: {
-        idUser: client.dataValues.UserIdUser
-      }
-    })
+    const email = req.body.email
     const account = await Account.findOne({
       where: {
-        email: user.dataValues.AccountEmail
+        email: email
       }
     })
     let message = 'Account activated successfuly'
@@ -337,23 +330,15 @@ async function activateClient (req, res) {
 // deactivate client by id
 async function deactivateClient (req, res) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  console.log(errors)
   if (!errors.isEmpty()) {
     return res.status(422).json({ errors: errors.array() })
   } try {
-    const id = parseInt(req.params.id)
-    const client = await Client.findOne({
-      where: {
-        idClient: id
-      }
-    })
-    const user = await User.findOne({
-      where: {
-        idUser: client.dataValues.UserIdUser
-      }
-    })
+    const email = req.body.email
+
     const account = await Account.findOne({
       where: {
-        email: user.dataValues.AccountEmail
+        email: email
       }
     })
     let message = 'Account Deactivated successfuly'
@@ -364,12 +349,12 @@ async function deactivateClient (req, res) {
     } else {
       message = 'already deactivated user!'
     }
-
     return res.status(200).json({
       success: true,
       message: message
     })
   } catch (error) {
+    console.log(error)
     return res.status(500).json({
       success: false,
       message: 'error',
@@ -443,5 +428,41 @@ async function addAdmin (req, res) {
 
 // if data is validated add in database;
 }
+async function getAccounts (req, res) {
+  const { page, size, search, filter } = req.query
+  let condition = null
+  if (filter && search) {
+    condition = { [Op.and]: [{ [Op.or]: [{ firstName: { [Op.like]: `%${search}%` } }, { lastName: { [Op.like]: `%${search}%` } }, { AccountEmail: { [Op.like]: `%${search}%` } }] }, { type: { [Op.eq]: filter } }] }
+  } else if (filter) {
+    condition = { type: { [Op.eq]: filter } }
+  } else if (search) {
+    condition = { [Op.or]: [{ firstName: { [Op.like]: `%${search}%` } }, { lastName: { [Op.like]: `%${search}%` } }, { AccountEmail: { [Op.like]: `%${search}%` } }] }
+  }
+  const { limit, offset } = getPagination(page, size)
+  console.log(limit, offset)
+  const total = await Account.count({
+    limit: limit,
+    offset: offset,
+    include: [{
+      model: User,
+      required: true,
+      where: condition
+    }]
+  })
+  Account.findAndCountAll({
+    limit,
+    offset,
+    include: [{
+      model: User,
+      required: true,
+      where: condition
+    }]
+  })
+    .then(data => {
+      data.count = total
+      const response = getPagingData(data, page, limit)
+      res.send({ ...response, success: true })
+    })
+}
 
-module.exports = { login, signup, profile, addClient, findAllClients, findClientById, deactivateClient, activateClient, addAdmin }
+module.exports = { login, getAccounts, signup, profile, addClient, findAllClients, findClientById, deactivateClient, activateClient, addAdmin }
