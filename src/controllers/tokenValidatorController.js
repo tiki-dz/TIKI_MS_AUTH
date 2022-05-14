@@ -1,9 +1,7 @@
 require('dotenv').config()
 const { validationResult } = require('express-validator/check')
-const { User, Administrator } = require('../models')
+const { User, Administrator, Client, Partner } = require('../models')
 const jwt = require('jsonwebtoken')
-// const Client = require('../models/Client')
-// const Partner = require('../models/Partner')
 
 // adding one client
 async function TokenCheck (req, res) {
@@ -29,7 +27,7 @@ async function TokenCheck (req, res) {
       where: {
         AccountEmail: decodedToken.email
       },
-      attributes: ['type', 'phoneNumber', 'sexe', 'profilePicture', 'lastName', 'firstName', 'AccountEmail', 'city']
+      attributes: ['idUser', 'type', 'phoneNumber', 'sexe', 'profilePicture', 'lastName', 'firstName', 'AccountEmail', 'city']
     })
     if (user) {
       if (user.type === 'admin') {
@@ -43,17 +41,26 @@ async function TokenCheck (req, res) {
         })
         res.status(200).send({ data: { message: 'the token is valide', adminrs: admin }, success: true, message: 'success' })
       } else if (user.type === 'client') {
-        res.status(200).send({ data: { message: 'the token is valide', client: user }, success: true, message: 'success' })
+        console.log(user.idUser)
+        const client = await Client.findOne({
+          where: {
+            UserIdUser: user.idUser
+          },
+          include: [
+            { model: User, attributes: ['type', 'phoneNumber', 'sexe', 'profilePicture', 'lastName', 'firstName', 'AccountEmail', 'city'] }
+          ]
+        })
+        res.status(200).send({ data: { message: 'the token is valide', client: client }, success: true, message: 'success' })
       } else {
-        // const partner = await Partner.findOne({
-        //   where: {
-        //     UserIdUser: user.idUser
-        //   },
-        //   include: [
-        //     { model: User, attributes: ['type', 'phoneNumber', 'sexe', 'profilePicture', 'lastName', 'firstName', 'AccountEmail', 'city'] }
-        //   ]
-        // })
-        res.status(200).send({ data: { message: 'the token is valide', partner: user }, success: true, message: 'success' })
+        const partner = await Partner.findOne({
+          where: {
+            UserIdUser: user.idUser
+          },
+          include: [
+            { model: User, attributes: ['type', 'phoneNumber', 'sexe', 'profilePicture', 'lastName', 'firstName', 'AccountEmail', 'city'] }
+          ]
+        })
+        res.status(200).send({ data: { message: 'the token is valide', partner: partner }, success: true, message: 'success' })
       }
     } else {
       res.status(400).send({ error: 'unknown user', success: false, message: 'processing err' })
