@@ -49,7 +49,8 @@ exports.validate = (method) => {
     case 'verifyCode': {
       return [
         body('email', 'Invalid email format').isEmail(),
-        body('code').isNumeric().isLength({ min: 6, max: 6 })
+        body('code').isNumeric().isLength({ min: 6, max: 6 }),
+        body('fcm_token').isLength({ min: 1 })
       ]
     };
     case 'login': {

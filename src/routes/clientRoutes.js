@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const clientController = require('../controllers/clientController')
 const validationClient = require('../validation/clientValidation')
+
 const multer = require('multer')
 
 // const checkifuserexist = require("../utils/checkifuserexist");
@@ -50,7 +51,8 @@ const multerFilter = (req, file, cb) => {
 }
 // the max size of an image is 20Mo
 const upload = multer({ storage: storage, limits: { fileSize: 1024 * 1024 * 20 }, fileFilter: multerFilter })
-
 router.put('/updateimage', verifyTokenAuth, upload.single('updateimage'), clientController.updateimage)
+router.get('/notification', verifyTokenAuth, clientController.getNotification)
+router.get('/notificationAll', verifyTokenAuth, clientController.getNotificationAll)
 
 module.exports = router

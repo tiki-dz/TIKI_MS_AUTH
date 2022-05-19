@@ -37,5 +37,28 @@ exports.validate = (method) => {
         param('id', 'Id must be a number').isNumeric()
       ]
     }
+    case 'notification': {
+      return [
+        body('title', 'Invalid title').isLength({ min: 1 }),
+        body('body', 'Invalid body').isLength({ min: 1 }),
+        body('email', 'Id must be a number').isEmail()
+      ]
+    }
+    case 'notificationSh': {
+      return [
+        body('title', 'Invalid title').isLength({ min: 1 }),
+        body('body', 'Invalid body').isLength({ min: 1 }),
+        body('email', 'Id must be a number').isEmail(),
+        body('date').isLength({ min: 1 }),
+        body('hour').isLength({ min: 1 })
+      ]
+    }
+    case 'notificationAll': {
+      return [
+        body('title', 'Invalid title').isLength({ min: 1 }),
+        body('body', 'Invalid body').isLength({ min: 1 }),
+        body('topic', 'Invalid topic').isLength({ min: 1 })
+      ]
+    }
   }
 }

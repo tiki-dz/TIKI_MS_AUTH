@@ -1,7 +1,8 @@
 require('dotenv').config()
 const { validationResult } = require('express-validator/check')
 const { User, UserClientInvalid, Client } = require('../models')
-const { Account } = require('../models')
+const { Account, Notification, NotificationAll } = require('../models')
+
 // const { Client } = require('../models')
 const fs = require('fs')
 const nodemailer = require('nodemailer')
@@ -9,7 +10,6 @@ const ejs = require('ejs')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const config = process.env
-
 function resetPassword (req, res, next) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
@@ -184,7 +184,8 @@ function verifyCode (req, res) {
               birthDate: invalidUser.birthDate,
               type: 'client',
               city: invalidUser.city,
-              sexe: invalidUser.sexe === 'Homme' ? 1 : 0
+              sexe: invalidUser.sexe === 'Homme' ? 1 : 0,
+              notificationToken: req.body.fcm_token
             }).then((user) => {
               Client.create({
                 UserIdUser: user.idUser
@@ -235,7 +236,6 @@ function verifyCode (req, res) {
     })
   }
 }
-
 function signup (req, res, next) {
   // check id data is validated
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
@@ -439,12 +439,10 @@ async function deleteClientByToken (req, res) {
   if (!errors.isEmpty()) {
     return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
   }
-
   try {
     const token = req.headers['x-access-token']
     const decodedToken = jwt.verify(token, config.JWT_AUTH_KEY)
     console.log('deleting Client with email = ', decodedToken.email)
-
     const account = await Account.findOne({
       where: {
         email: decodedToken.email
@@ -565,5 +563,51 @@ function passwordVerify (req, res, next) {
     })
   }
 }
-
-module.exports = { resetPassword, login, signup, verifyCode, profile, resendVerficationCode, deleteClientByToken, updateimage, updateClientByToken, sendClientActivationEmail, passwordVerify }
+async function getNotification (req, res, next) {
+  const { page, size } = req.query
+  const { limit, offset } = getPaginationNotification(page, size)
+  const token = req.headers['x-access-token']
+  const decodedToken = jwt.verify(token, config.JWT_AUTH_KEY)
+  console.log('deleting Client with email = ', decodedToken.email)
+  Account.findOne({
+    where: {
+      email: decodedToken.email
+    },
+    include: [
+      { model: User }]
+  }).then((user) => {
+    Notification.findAndCountAll({
+      where: {
+        UserIdUser: user.User.idUser
+      },
+      limit,
+      offset
+    }).then((notifs) => {
+      const response = getPagingDataNotifcation(notifs, page, limit)
+      return res.status(200).send({ data: response, success: true, message: 'notification get succes' })
+    })
+  })
+}
+function getNotificationAll (req, res, next) {
+  const { page, size } = req.query
+  const { limit, offset } = getPaginationNotification(page, size)
+  NotificationAll.findAndCountAll({
+    limit,
+    offset
+  }).then((notifs) => {
+    const response = getPagingDataNotifcation(notifs, page, limit)
+    return res.status(200).send({ data: response, success: true, message: 'notification get succes' })
+  })
+}
+const getPagingDataNotifcation = (data, page, limit) => {
+  const { count: totalItems, rows: notifs } = data
+  const currentPage = page ? +page : 0
+  const totalPages = Math.ceil(totalItems / limit)
+  return { totalItems, notifs, totalPages, currentPage }
+}
+const getPaginationNotification = (page, size) => {
+  const limit = size ? +size : 10
+  const offset = page ? page * limit : 0
+  return { limit, offset }
+}
+module.exports = { resetPassword, login, signup, verifyCode, profile, resendVerficationCode, deleteClientByToken, updateimage, updateClientByToken, sendClientActivationEmail, passwordVerify, getNotification, getNotificationAll }

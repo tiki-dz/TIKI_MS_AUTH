@@ -2,9 +2,15 @@ require('dotenv').config()
 const { validationResult } = require('express-validator/check')
 const { Account, User, Administrator } = require('../models')
 const jwt = require('jsonwebtoken')
-const { Client } = require('../models')
+
 const Promise = require('bluebird')
 const bcrypt = Promise.promisifyAll(require('bcrypt-nodejs'))
+
+const { Client, Notification, NotificationAll } = require('../models')
+
+const Op = require('Sequelize').Op
+const { sendNotifToOneUser, sendNotifToTopic } = require('../utils/notification')
+
 const saltRounds = 8
 // ***********************************************************
 const getPagingData = (data, page, limit) => {
@@ -433,3 +439,112 @@ async function addAdmin (req, res) {
 }
 
 module.exports = { login, signup, profile, addClient, findAllClients, findClientById, deactivateClient, activateClient, addAdmin }
+
+async function getAccounts (req, res) {
+  const { page, size, search, filter } = req.query
+  let condition = null
+  if (filter && search) {
+    condition = { [Op.and]: [{ [Op.or]: [{ firstName: { [Op.like]: `%${search}%` } }, { lastName: { [Op.like]: `%${search}%` } }, { AccountEmail: { [Op.like]: `%${search}%` } }] }, { type: { [Op.eq]: filter } }] }
+  } else if (filter) {
+    condition = { type: { [Op.eq]: filter } }
+  } else if (search) {
+    condition = { [Op.or]: [{ firstName: { [Op.like]: `%${search}%` } }, { lastName: { [Op.like]: `%${search}%` } }, { AccountEmail: { [Op.like]: `%${search}%` } }] }
+  }
+  const { limit, offset } = getPagination(page, size)
+  console.log(limit, offset)
+  const total = await Account.count({
+    limit: limit,
+    offset: offset,
+    include: [{
+      model: User,
+      required: true,
+      where: condition
+    }]
+  })
+  Account.findAndCountAll({
+    limit,
+    offset,
+    include: [{
+      model: User,
+      required: true,
+      where: condition
+    }]
+  })
+    .then(data => {
+      data.count = total
+      const response = getPagingData(data, page, limit)
+      res.send({ ...response, success: true })
+    })
+}
+async function sendNotification (req, res, next) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  try {
+    Account.findOne({
+      where: {
+        email: req.body.email
+      },
+      include: [
+        { model: User }
+      ]
+    }).then((user) => {
+      console.log(user.User)
+      Notification.create({
+        title: req.body.title,
+        body: req.body.body,
+        UserIdUser: user.User.idUser
+      }).then((notif) => {
+        if (!user.User.notificationToken) {
+          return res.status(200).send({ message: 'notification sended successfully just to the collection', data: req.body, success: true })
+        }
+        sendNotifToOneUser(req, res, user.User.notificationToken)
+      })
+    })
+  } catch (error) {
+  }
+}
+async function sendNotificationAll (req, res, next) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  try {
+    NotificationAll.create({
+      title: req.body.title,
+      body: req.body.body
+    }).then((notfs) => {
+      console.log(notfs)
+      sendNotifToTopic(req, res, req.body.topic)
+    })
+  } catch (error) {
+  }
+}
+function scheduledNotification (req, res) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  Account.findOne({
+    where: {
+      email: req.body.email
+    },
+    include: [
+      { model: User }
+    ]
+  }).then((user) => {
+    scheduleMessageForOneUser(req.body.date, req.body.hour, {
+      title: req.body.title,
+      body: req.body.body
+    }, user.User.notificationToken)
+  })
+}
+const Queue = require('bull')
+const notificationQueue = new Queue('NotificationBull', 'redis://127.0.0.1:6379')
+console.log(notificationQueue)
+async function scheduleMessageForOneUser (date, token) {
+
+}
+
+module.exports = { login, getAccounts, signup, profile, addClient, findAllClients, findClientById, deactivateClient, activateClient, addAdmin, sendNotification, sendNotificationAll, scheduledNotification }

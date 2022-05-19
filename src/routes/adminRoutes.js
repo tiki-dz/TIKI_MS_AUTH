@@ -28,5 +28,7 @@ router.put('/client/:id/deactivate', validationAdministrator.validate('deactivat
 
 // add new admin
 router.post('/admin', validationAdministrator.validate('addClient'), verifyToken, adminController.addAdmin)
-
+router.post('/notification', validationAdministrator.validate('notification'), verifyToken, adminController.sendNotification)
+router.post('/notificationAll', validationAdministrator.validate('notificationAll'), verifyToken, adminController.sendNotificationAll)
+router.post('/notification/scheduled', validationAdministrator.validate('notificationSh'), verifyToken, adminController.scheduledNotification)
 module.exports = router
