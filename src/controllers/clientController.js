@@ -1,6 +1,6 @@
 require('dotenv').config()
 const { validationResult } = require('express-validator/check')
-const { User, UserClientInvalid, Client } = require('../models')
+const { User, UserClientInvalid, Client, Faq, FaqCategorie } = require('../models')
 const { Account, Notification, NotificationAll } = require('../models')
 
 // const { Client } = require('../models')
@@ -610,4 +610,49 @@ const getPaginationNotification = (page, size) => {
   const offset = page ? page * limit : 0
   return { limit, offset }
 }
-module.exports = { resetPassword, login, signup, verifyCode, profile, resendVerficationCode, deleteClientByToken, updateimage, updateClientByToken, sendClientActivationEmail, passwordVerify, getNotification, getNotificationAll }
+const getPagingDataFaqs = (data, page, limit) => {
+  const { count: totalItems, rows: faqs } = data
+  const currentPage = page ? +page : 0
+  const totalPages = Math.ceil(totalItems / limit)
+  return { totalItems, faqs, totalPages, currentPage }
+}
+const getPaginationFaqs = (page, size) => {
+  const limit = size ? +size : 10
+  const offset = page ? page * limit : 0
+  return { limit, offset }
+}
+async function getFaqFilterd (req, res, next) {
+  const { page, size, category } = req.query
+  const condition = category == null ? null : { idFaqCategorie: category }
+  const { limit, offset } = getPaginationFaqs(page, size)
+  console.log(limit, offset)
+  const total = await Faq.count({
+    limit: limit,
+    offset: offset,
+    include: [{
+      model: FaqCategorie,
+      required: true,
+      where: condition
+    }]
+  })
+  Faq.findAndCountAll({
+    limit,
+    offset,
+    include: [{
+      model: FaqCategorie,
+      required: true,
+      where: condition
+    }]
+  })
+    .then(data => {
+      data.count = total
+      const response = getPagingDataFaqs(data, page, limit)
+      res.send({ ...response, success: true })
+    })
+}
+function getFaqCategory (req, res, next) {
+  FaqCategorie.findAll().then(faqsCategories => {
+    return res.send({ data: faqsCategories, success: true, message: 'success' })
+  })
+}
+module.exports = { resetPassword, login, signup, verifyCode, profile, resendVerficationCode, deleteClientByToken, updateimage, updateClientByToken, sendClientActivationEmail, passwordVerify, getNotification, getNotificationAll, getFaqFilterd, getFaqCategory }

@@ -31,4 +31,11 @@ router.post('/admin', validationAdministrator.validate('addClient'), verifyToken
 router.post('/notification', validationAdministrator.validate('notification'), verifyToken, adminController.sendNotification)
 router.post('/notificationAll', validationAdministrator.validate('notificationAll'), verifyToken, adminController.sendNotificationAll)
 router.post('/notification/scheduled', validationAdministrator.validate('notificationSh'), verifyToken, adminController.scheduledNotification)
+router.post('/faqCategorie', validationAdministrator.validate('faqCategorie'), verifyToken, adminController.addFaqCategorie)
+router.delete('/faqCategorie/:id', validationAdministrator.validate('deletefaqCategorie'), verifyToken, adminController.deleteFaqCategorie)
+router.get('/faqCategorie', adminController.getFaqCategorie)
+router.post('/faq', verifyToken, validationAdministrator.validate('addFaq'), adminController.addFaq)
+router.delete('/faq/:id', verifyToken, validationAdministrator.validate('deletefaqCategorie'), adminController.deleteFaq)
+router.patch('/faq/:id', verifyToken, validationAdministrator.validate('patchFaq'), adminController.patchFaq)
+router.patch('/faqCategorie/:id', verifyToken, validationAdministrator.validate('patchFaq'), adminController.patchFaqCategorie)
 module.exports = router

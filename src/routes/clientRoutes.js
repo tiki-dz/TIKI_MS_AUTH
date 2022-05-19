@@ -54,5 +54,7 @@ const upload = multer({ storage: storage, limits: { fileSize: 1024 * 1024 * 20 }
 router.put('/updateimage', verifyTokenAuth, upload.single('updateimage'), clientController.updateimage)
 router.get('/notification', verifyTokenAuth, clientController.getNotification)
 router.get('/notificationAll', verifyTokenAuth, clientController.getNotificationAll)
+router.get('/faqs', verifyTokenAuth, clientController.getFaqFilterd)
+router.get('/faqsCategory', verifyTokenAuth, clientController.getFaqCategory)
 
 module.exports = router

@@ -60,5 +60,27 @@ exports.validate = (method) => {
         body('topic', 'Invalid topic').isLength({ min: 1 })
       ]
     }
+    case 'faqCategorie': {
+      return [
+        body('name', 'Invalid title').isLength({ min: 1 })
+      ]
+    }
+    case 'deletefaqCategorie': {
+      return [
+        param('id', 'Invalid is').isNumeric()
+      ]
+    }
+    case 'addFaq': {
+      return [
+        body('id', 'Invalid is').isNumeric(),
+        body('question', 'Invalid question').isLength({ min: 1 }),
+        body('reponse', 'Invalid reponse').isLength({ min: 1 })
+      ]
+    }
+    case 'patchFaq': {
+      return [
+        param('id', 'Invalid is').isNumeric()
+      ]
+    }
   }
 }
