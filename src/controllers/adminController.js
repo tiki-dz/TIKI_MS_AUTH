@@ -3,13 +3,15 @@ const { validationResult } = require('express-validator/check')
 const { Account, User, Administrator, FaqCategorie, Faq } = require('../models')
 const jwt = require('jsonwebtoken')
 
-const Promise = require('bluebird')
-const bcrypt = Promise.promisifyAll(require('bcrypt-nodejs'))
+// const Promise = require('bluebird')
+// const bcrypt = Promise.promisifyAll(require('bcrypt-nodejs'))
 
 const { Client, Notification, NotificationAll } = require('../models')
 
-const Op = require('Sequelize').Op
 const { sendNotifToOneUser, sendNotifToTopic } = require('../utils/notification')
+// const { Client } = require('../models')
+const bcrypt = require('bcrypt')
+const Op = require('Sequelize').Op
 
 const saltRounds = 8
 // ***********************************************************
@@ -92,11 +94,13 @@ function signup (req, res) {
       message: 'invalid data'
     })
   } try {
+    console.log('dkhalna  hna')
     Account.findOne({
       where: {
         email: req.body.email
       }
     }).then(function (account) {
+      console.log('dkhalna  hna2')
       if (account != null) {
         return res.status(409).json({
           success: false,
@@ -104,52 +108,63 @@ function signup (req, res) {
           errors: ['account already exist']
         })
       } else {
-        bcrypt.hash(req.body.password, 10, function (err, hash) {
-          if (err) {
-            return res.status(500).json({
-              success: false,
-              message: 'internal server error',
-              errors: ['internal server error']
-            })
-          }
-          Account.create({
-            email: req.body.email,
-            password: hash,
-            state: 1
-          }).then((account, err) => {
+        console.log('dkhalna  hna3')
+        try {
+          bcrypt.hash(req.body.password, 10, function (err, hash) {
+            console.log('dkhalna  hna4')
             console.log(err)
             if (err) {
-              // Account.destroy({ where: { email: req.body.email } })
               return res.status(500).json({
                 success: false,
                 message: 'internal server error',
                 errors: ['internal server error']
               })
             }
-            User.create({
-              AccountEmail: req.body.email,
-              firstName: req.body.firstName,
-              lastName: req.body.lastName,
-              birthDate: req.body.birthDate,
-              profilePicture: (process.env.UPLOAD_URL + 'ProfileImage/user-default.jpg-1648754555891.jpg'),
-              type: 'admin',
-              city: req.body.city,
-              sexe: req.body.sexe === 'Homme' ? 1 : 0,
-              phoneNumber: req.body.phoneNumber
-            }).then((user) => {
-              Administrator.create({
-                role: 'admin',
-                UserIdUser: user.idUser
-              }).then((account) => {
-                return res.status(200).json({
-                  data: null,
-                  success: true,
-                  message: 'Admin created successfuly'
+            Account.create({
+              email: req.body.email,
+              password: hash,
+              state: 1
+            }).then((account, err) => {
+              console.log('here')
+              console.log(err)
+              if (err) {
+              // Account.destroy({ where: { email: req.body.email } })
+                return res.status(500).json({
+                  success: false,
+                  message: 'internal server error',
+                  errors: ['internal server error']
+                })
+              }
+              User.create({
+                AccountEmail: req.body.email,
+                firstName: req.body.firstName,
+                lastName: req.body.lastName,
+                birthDate: req.body.birthDate,
+                profilePicture: (process.env.UPLOAD_URL + 'ProfileImage/user-default.jpg-1648754555891.jpg'),
+                type: 'admin',
+                city: req.body.city,
+                sexe: req.body.sexe === 'Homme' ? 1 : 0,
+                phoneNumber: req.body.phoneNumber
+              }).then((user) => {
+                Administrator.create({
+                  role: 'admin',
+                  UserIdUser: user.idUser
+                }).then((account) => {
+                  return res.status(200).json({
+                    data: null,
+                    success: true,
+                    message: 'Admin created successfuly'
+                  })
                 })
               })
             })
           })
-        })
+        } catch (err) {
+          return res.status(500).json({
+            success: false,
+            errors: [err]
+          })
+        }
       }
     })
   } catch (err) {
@@ -291,24 +306,15 @@ async function findClientById (req, res) {
 }
 // activate client by id
 async function activateClient (req, res) {
-  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  const errors = validationResult(req)
+  console.log(errors) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
     return res.status(422).json({ errors: errors.array() })
   } try {
-    const id = parseInt(req.params.id)
-    const client = await Client.findOne({
-      where: {
-        idClient: id
-      }
-    })
-    const user = await User.findOne({
-      where: {
-        idUser: client.dataValues.UserIdUser
-      }
-    })
+    const email = req.body.email
     const account = await Account.findOne({
       where: {
-        email: user.dataValues.AccountEmail
+        email: email
       }
     })
     let message = 'Account activated successfuly'
@@ -331,23 +337,15 @@ async function activateClient (req, res) {
 // deactivate client by id
 async function deactivateClient (req, res) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  console.log(errors)
   if (!errors.isEmpty()) {
     return res.status(422).json({ errors: errors.array() })
   } try {
-    const id = parseInt(req.params.id)
-    const client = await Client.findOne({
-      where: {
-        idClient: id
-      }
-    })
-    const user = await User.findOne({
-      where: {
-        idUser: client.dataValues.UserIdUser
-      }
-    })
+    const email = req.body.email
+
     const account = await Account.findOne({
       where: {
-        email: user.dataValues.AccountEmail
+        email: email
       }
     })
     let message = 'Account Deactivated successfuly'
@@ -358,12 +356,12 @@ async function deactivateClient (req, res) {
     } else {
       message = 'already deactivated user!'
     }
-
     return res.status(200).json({
       success: true,
       message: message
     })
   } catch (error) {
+    console.log(error)
     return res.status(500).json({
       success: false,
       message: 'error',

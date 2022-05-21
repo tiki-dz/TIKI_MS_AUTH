@@ -6,10 +6,10 @@ const validationClient = require('../validation/clientValidation')
 const verifyToken = require('../utils/verifyTokenAuthAdmin')
 const verifyTokenAuthSuperAdmin = require('../utils/verifyTokenAuthSuperAdmin')
 
-router.post('/signup', validationClient.validate('signup'), verifyTokenAuthSuperAdmin, adminController.signup)
+router.post('/signup', verifyTokenAuthSuperAdmin, validationClient.validate('signup'), adminController.signup)
 router.post('/login', validationClient.validate('login'), adminController.login)
 router.get('/profile', verifyToken, adminController.profile)
-
+router.get('/accounts', verifyToken, adminController.getAccounts)
 // *************************************************************************
 
 // get all clients
@@ -22,9 +22,9 @@ router.post('/client', validationAdministrator.validate('addClient'), verifyToke
 // *************************************************************************
 
 // activate client
-router.put('/client/:id/activate', validationAdministrator.validate('activate'), verifyToken, adminController.activateClient)
+router.put('/client/activate', validationAdministrator.validate('activate'), verifyToken, adminController.activateClient)
 // deactivate client
-router.put('/client/:id/deactivate', validationAdministrator.validate('deactivate'), verifyToken, adminController.deactivateClient)
+router.put('/client/deactivate', validationAdministrator.validate('deactivate'), verifyToken, adminController.deactivateClient)
 
 // add new admin
 router.post('/admin', validationAdministrator.validate('addClient'), verifyToken, adminController.addAdmin)
