@@ -22,7 +22,8 @@ function login (req, res, next) {
         { model: User, attributes: ['type', 'phoneNumber', 'sexe', 'profilePicture', 'lastName', 'firstName', 'AccountEmail', 'city'] }
       ]
     }).then(function (account) {
-    // check the password
+      console.log(account)
+      console.log('here')
       if (account === null) {
         return res.status(404).json({
           success: false,
@@ -72,25 +73,35 @@ function login (req, res, next) {
         account.password = undefined
         account.createdAt = undefined
         account.updatedAt = undefined
-        User.findOne({
+        User.update({
+          notificationToken: req.body.fcm_token
+        }, {
           where: {
             AccountEmail: req.body.email
-          },
-          include: [
-            { model: account.User.type === 'client' ? Client : Partner }
-          ]
-        }).then((user) => {
-          return res.status(200).send({
-            message: 'success',
-            data: {
-              token: token,
-              typeAccount: account.User.type,
-              User: user
+          }
+        }).then((data) => {
+          User.findOne({
+            where: {
+              AccountEmail: req.body.email
             },
-            success: true
+            include: [
+              { model: account.User.type === 'client' ? Client : Partner }
+            ]
+          }).then((user) => {
+            return res.status(200).send({
+              message: 'success',
+              data: {
+                token: token,
+                typeAccount: account.User.type,
+                User: user
+              },
+              success: true
+            })
           })
         })
       })
+
+      // check the password
     })
   } catch (err) {
     return res.status(500).json({
