@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-const { Administrator } = require('./Administrator')
+
 // eslint-disable-next-line no-unused-vars
 const { Client } = require('./Client')
 
@@ -29,7 +29,7 @@ module.exports = (sequelize, DataTypes) => {
       }
     },
     notificationToken: {
-      type: DataTypes.STRING(45)
+      type: DataTypes.TEXT
     },
     profilePicture: {
       type: DataTypes.TEXT()
@@ -49,7 +49,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DATEONLY,
       allowNull: false
     }
-
   }, {
     classMethods: {
       associate: function (models) {
@@ -57,6 +56,7 @@ module.exports = (sequelize, DataTypes) => {
         user.hasOne(models.Administrator)
         user.hasOne(models.Client)
         user.hasOne(models.Partner)
+        user.hasMany(models.Notification)
         console.log('Account has one User!')
       }
     }

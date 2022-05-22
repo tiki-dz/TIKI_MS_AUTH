@@ -1,8 +1,15 @@
 require('dotenv').config()
 const { validationResult } = require('express-validator/check')
-const { Account, User, Administrator } = require('../models')
+const { Account, User, Administrator, FaqCategorie, Faq } = require('../models')
 const jwt = require('jsonwebtoken')
-const { Client } = require('../models')
+
+// const Promise = require('bluebird')
+// const bcrypt = Promise.promisifyAll(require('bcrypt-nodejs'))
+
+const { Client, Notification, NotificationAll } = require('../models')
+
+const { sendNotifToOneUser, sendNotifToTopic } = require('../utils/notification')
+// const { Client } = require('../models')
 const bcrypt = require('bcrypt')
 const Op = require('Sequelize').Op
 
@@ -464,5 +471,172 @@ async function getAccounts (req, res) {
       res.send({ ...response, success: true })
     })
 }
+async function sendNotification (req, res, next) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  try {
+    Account.findOne({
+      where: {
+        email: req.body.email
+      },
+      include: [
+        { model: User }
+      ]
+    }).then((user) => {
+      console.log(user.User)
+      Notification.create({
+        title: req.body.title,
+        body: req.body.body,
+        UserIdUser: user.User.idUser
+      }).then((notif) => {
+        if (!user.User.notificationToken) {
+          return res.status(200).send({ message: 'notification sended successfully just to the collection', data: req.body, success: true })
+        }
+        sendNotifToOneUser(req, res, user.User.notificationToken)
+      })
+    })
+  } catch (error) {
+  }
+}
+async function sendNotificationAll (req, res, next) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  try {
+    NotificationAll.create({
+      title: req.body.title,
+      body: req.body.body
+    }).then((notfs) => {
+      console.log(notfs)
+      sendNotifToTopic(req, res, req.body.topic)
+    })
+  } catch (error) {
+  }
+}
+function scheduledNotification (req, res) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  Account.findOne({
+    where: {
+      email: req.body.email
+    },
+    include: [
+      { model: User }
+    ]
+  }).then((user) => {
+    scheduleMessageForOneUser(req.body.date, req.body.hour, {
+      title: req.body.title,
+      body: req.body.body
+    }, user.User.notificationToken)
+  })
+}
+function addFaqCategorie (req, res) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  FaqCategorie.create({
+    nom: req.body.name
+  }).then((faqCategorie) => {
+    return res.status(200).json({ success: true, data: faqCategorie, message: 'success' })
+  })
+}
+function deleteFaqCategorie (req, res) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  FaqCategorie.destroy({
+    where: {
+      idFaqCategorie: req.params.id
+    }
+  }).then((faqCategorie) => {
+    return res.status(200).json({ success: true, data: faqCategorie, message: 'success' })
+  })
+}
+function getFaqCategorie (req, res) {
+  FaqCategorie.findAll({
+  }).then((faqCategorie) => {
+    return res.status(200).json({ success: true, data: faqCategorie, message: 'success' })
+  })
+}
 
-module.exports = { login, getAccounts, signup, profile, addClient, findAllClients, findClientById, deactivateClient, activateClient, addAdmin }
+const Queue = require('bull')
+const notificationQueue = new Queue('NotificationBull', 'redis://127.0.0.1:6379')
+console.log(notificationQueue)
+async function scheduleMessageForOneUser (date, token) {
+
+}
+async function addFaq (req, res, next) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  FaqCategorie.findOne({
+    where: {
+      idFaqCategorie: req.body.id
+    }
+  }).then((data) => {
+    if (!data) {
+      return res.status(404).json({ errors: errors.array(), success: false, message: 'categoryFaqNotFound' })
+    } else {
+      Faq.create({
+        Question: req.body.question,
+        Reponse: req.body.reponse,
+        FaqCategorieIdFaqCategorie: req.body.id
+      }).then((faq) => {
+        return res.status(200).json({ data: faq, success: true, message: 'added successfully' })
+      })
+    }
+  })
+}
+function deleteFaq (req, res) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  Faq.destroy({
+    where: {
+      idFaq: req.params.id
+    }
+  }).then((faq) => {
+    return res.status(200).json({ success: true, data: faq, message: 'success' })
+  })
+}
+function patchFaq (req, res) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  Faq.findOne({ where: { idFaq: req.params.id } }).then((faq) => {
+    if (!faq) {
+      return res.status(404).json({ errors: errors.array(), success: false, message: 'faq not found' })
+    }
+    faq.Question = req.body.question ?? faq.Question
+    faq.Reponse = req.body.reponse ?? faq.Reponse
+    faq.save().then((faq) => {
+      return res.status(200).json({ success: true, data: faq, message: 'success' })
+    })
+  })
+}
+function patchFaqCategorie (req, res) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  FaqCategorie.findOne({ where: { idFaqCategorie: req.params.id } }).then((faqCategorie) => {
+    if (!faqCategorie) {
+      return res.status(404).json({ errors: errors.array(), success: false, message: 'faq not found' })
+    }
+    faqCategorie.nom = req.body.nom ?? faqCategorie.nom
+    faqCategorie.save().then((faq) => {
+      return res.status(200).json({ success: true, data: faq, message: 'success' })
+    })
+  })
+}
+module.exports = { login, getAccounts, signup, profile, addClient, findAllClients, findClientById, deactivateClient, activateClient, addAdmin, sendNotification, sendNotificationAll, scheduledNotification, addFaqCategorie, deleteFaqCategorie, getFaqCategorie, addFaq, deleteFaq, patchFaq, patchFaqCategorie }
