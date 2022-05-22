@@ -4,8 +4,9 @@ const express = require('express')
 const path = require('path')
 const cookieParser = require('cookie-parser')
 const logger = require('morgan')
-
 const indexRouter = require('./routes/indexRoutes')
+const test = require('./utils')
+// const { MESSAGE_BROKER_URL } = require('./config/config.js')
 // const usersRouter = require("./routes/users");
 // const Account = require("./models/Account");
 // const User = require("./models/User");
@@ -28,6 +29,15 @@ app.use('/api', indexRouter)
 // sequelize.query('SET FOREIGN_KEY_CHECKS = 0').then(function () {
 //   sequelize.sync({ force: false, alter: true })
 // })
+
+// amqplib.connect(MESSAGE_BROKER_URL).then((connection) => {
+//   const channel = connection.createChannel()
+//   console.log(channel)
+// }).catch((err) => {
+//   console.log(err)
+// })
+
+test.CreatChannel1()
 app.listen(5001)
 module.exports = app
 console.log('server start on port 5001')
