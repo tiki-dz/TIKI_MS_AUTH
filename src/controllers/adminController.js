@@ -645,7 +645,9 @@ function patchFaqCategorie (req, res) {
 function testingRabbitmq (req, res) {
   try {
     const channel = tedfsst.channel
-    tedfsst.PublishMessage(channel, 'AUTH_SERVICE', 'message')
+    const payload = { token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImEuaGFyaXJpQGVzaS1zYmEuZHoiLCJpYXQiOjE2NTMzMDg5NzEsImV4cCI6MTY1NTkwMDk3MX0.0JTsh8CtuC2eX6lTWj6jD7TeGs0RJ9kBzQQOijNsb4c', score: 5 }
+    const message = [{ event: 'ADD-SCORE', payload: payload }]
+    tedfsst.PublishMessage(channel, 'AUTH_SERVICE', message)
     res.status(200).send('succes')
   } catch (error) {
     res.send(error)

@@ -2,7 +2,7 @@
 
 const { MESSAGE_BROKER_URL, AUTH_BINDING_KEY } = require('../config/config.js')
 const amqp = require('amqplib/callback_api')
-
+const eventHendler = require('./eventsFunctions')
 // create a channel
 
 module.exports.CreatChannel = () => {
@@ -18,7 +18,11 @@ module.exports.CreatChannel = () => {
       channel.assertQueue(AUTH_BINDING_KEY, {
         durable: false
       })
-      channel.consume(AUTH_BINDING_KEY, function (msg) { console.log(' [x] Received %s', msg.content.toString()) }, {
+      channel.consume(AUTH_BINDING_KEY, async function (msg) {
+        const data = JSON.parse(msg.content)
+        console.log(' [x] Received ' + data[0].event)
+        await eventSwitcher(data[0].event, data[0].payload)
+      }, {
         // automatic acknowledgment mode,
         noAck: true
       })
@@ -32,6 +36,17 @@ module.exports.PublishMessage = (channel, BINDING_KEY, message) => {
   channel.assertQueue(BINDING_KEY, {
     durable: false
   })
-  channel.sendToQueue(BINDING_KEY, Buffer.from(message), { persistent: true })
+  channel.sendToQueue(BINDING_KEY, Buffer.from(JSON.stringify(message)), { persistent: true })
   console.log(' [x] send %s', message)
+}
+
+async function eventSwitcher (event, payload) {
+  switch (event) {
+    case 'ADD-SCORE':
+      await eventHendler.addScoreToClient(payload)
+      break
+
+    default:
+      break
+  }
 }
