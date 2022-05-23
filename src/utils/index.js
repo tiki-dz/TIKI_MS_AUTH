@@ -1,69 +1,36 @@
-/* eslint-disable no-useless-catch */
 /* ----------------------- Message broker ----------------------- */
 
-const { MESSAGE_BROKER_URL, EXCHANGE_NAME } = require('../config/config.js')
+const { MESSAGE_BROKER_URL, AUTH_BINDING_KEY } = require('../config/config.js')
 const amqp = require('amqplib/callback_api')
 
 // create a channel
-module.exports.CreatChannel1 = () => {
+
+module.exports.CreatChannel = () => {
   amqp.connect(MESSAGE_BROKER_URL, function (error0, connection) {
     if (error0) {
       console.log(error0)
       throw error0
     }
     connection.createChannel(function (error1, channel) {
-      const msg = 'Hello world'
-      const exchange = 'logs'
-
-      channel.assertExchange(exchange, 'fanout', {
+      module.exports.channel = channel
+      // consume messages part
+      channel.assertQueue(AUTH_BINDING_KEY, {
         durable: false
       })
-      channel.publish(exchange, '', Buffer.from(msg))
-      console.log(' [x] Sent %s', msg)
+      channel.consume(AUTH_BINDING_KEY, function (msg) { console.log(' [x] Received %s', msg.content.toString()) }, {
+        // automatic acknowledgment mode,
+        noAck: true
+      })
     })
-
-    //   channel.assertQueue(EXCHANGE_NAME, {
-    //     durable: false
-    //   })
-    //   channel.sendToQueue(EXCHANGE_NAME, Buffer.from(msg), { persistent: true })
-    //   console.log(' [x] Sent %s', msg)
-    // })
-    // setTimeout(function () {
-    //   connection.close()
-    //   // process.exit(0)
-    // }, 500)
   })
+  // TODO add the connection close method
 }
-// create a channel
-// module.exports.CreatChannel = async () => {
-//   try {
-//     const connection = amqplib.connect(MESSAGE_BROKER_URL)
-//     const channel = await connection.createChannel()
-//     await channel.assertExchange(EXCHANGE_NAME, 'direct', false)
-//     return channel
-//   } catch (error) {
-//     throw error
-//   }
-// }
 
 // publish messages
-// eslint-disable-next-line camelcase
-module.exports.PublishMessage = async (channel, binding_key, message) => {
-  try {
-    await channel.publish(EXCHANGE_NAME, binding_key, Buffer.from(message))
-  } catch (error) {
-    throw error
-  }
-}
-
-// subscribe messages
-// eslint-disable-next-line camelcase
-module.exports.SubscribeMessage = async (channel, service, binding_key) => {
-  const appQueue = channel.assertQueue('QUEUE_NAME')
-  channel.bindQueue(appQueue.queue, EXCHANGE_NAME, binding_key)
-  channel.consume(appQueue.queue, data => {
-    console.log('received data')
-    console.log(data.content.toString())
-    channel.ack(data)
+module.exports.PublishMessage = (channel, BINDING_KEY, message) => {
+  channel.assertQueue(BINDING_KEY, {
+    durable: false
   })
+  channel.sendToQueue(BINDING_KEY, Buffer.from(message), { persistent: true })
+  console.log(' [x] send %s', message)
 }

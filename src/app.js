@@ -37,7 +37,7 @@ app.use('/api', indexRouter)
 //   console.log(err)
 // })
 
-test.CreatChannel1()
+test.CreatChannel()
 app.listen(5001)
 module.exports = app
 console.log('server start on port 5001')

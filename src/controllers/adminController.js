@@ -9,6 +9,8 @@ const jwt = require('jsonwebtoken')
 const { Client, Notification, NotificationAll } = require('../models')
 
 const { sendNotifToOneUser, sendNotifToTopic } = require('../utils/notification')
+const tedfsst = require('../utils')
+
 // const { Client } = require('../models')
 const bcrypt = require('bcrypt')
 const Op = require('Sequelize').Op
@@ -639,4 +641,15 @@ function patchFaqCategorie (req, res) {
     })
   })
 }
-module.exports = { login, getAccounts, signup, profile, addClient, findAllClients, findClientById, deactivateClient, activateClient, addAdmin, sendNotification, sendNotificationAll, scheduledNotification, addFaqCategorie, deleteFaqCategorie, getFaqCategorie, addFaq, deleteFaq, patchFaq, patchFaqCategorie }
+
+function testingRabbitmq (req, res) {
+  try {
+    const channel = tedfsst.channel
+    tedfsst.PublishMessage(channel, 'AUTH_SERVICE', 'message')
+    res.status(200).send('succes')
+  } catch (error) {
+    res.send(error)
+  }
+}
+
+module.exports = { login, getAccounts, signup, profile, addClient, findAllClients, findClientById, deactivateClient, activateClient, addAdmin, sendNotification, sendNotificationAll, scheduledNotification, addFaqCategorie, deleteFaqCategorie, getFaqCategorie, addFaq, deleteFaq, patchFaq, patchFaqCategorie, testingRabbitmq }
