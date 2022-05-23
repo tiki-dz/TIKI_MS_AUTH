@@ -9,6 +9,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true
+      },
+      score: {
+        type: DataTypes.INTEGER,
+        allowNull: true
       }
       // idUser: {
       //   type: DataTypes.INTEGER,

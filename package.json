@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www",
+    "start": "nodemon src/app.js --exec \"npm run lint && node\"",
     "lint": "eslint src/**/*.js"
   },
   "dependencies": {
+    "amqplib": "^0.8.0",
     "bcrypt": "^5.0.1",
     "bcrypt-nodejs": "^0.0.3",
     "bluebird": "^3.7.2",
@@ -14,7 +15,7 @@
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
     "dotenv": "^16.0.0",
-    "ejs": "~2.6.1",
+    "ejs": "^3.1.7",
     "env": "^0.0.2",
     "eslint": "^8.11.0",
     "express": "~4.16.1",
@@ -22,7 +23,7 @@
     "firebase-admin": "^10.2.0",
     "http-errors": "~1.6.3",
     "jsonwebtoken": "^8.5.1",
-    "lint": "^0.7.0",
+    "lint": "^1.1.2",
     "moment": "^2.29.3",
     "morgan": "~1.9.1",
     "multer": "^1.4.4",

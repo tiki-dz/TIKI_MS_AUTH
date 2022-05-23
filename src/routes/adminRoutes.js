@@ -38,4 +38,7 @@ router.post('/faq', verifyToken, validationAdministrator.validate('addFaq'), adm
 router.delete('/faq/:id', verifyToken, validationAdministrator.validate('deletefaqCategorie'), adminController.deleteFaq)
 router.patch('/faq/:id', verifyToken, validationAdministrator.validate('patchFaq'), adminController.patchFaq)
 router.patch('/faqCategorie/:id', verifyToken, validationAdministrator.validate('patchFaq'), adminController.patchFaqCategorie)
+// for testing purposes only
+router.post('/testingRabbitmq', adminController.testingRabbitmq)
+
 module.exports = router
