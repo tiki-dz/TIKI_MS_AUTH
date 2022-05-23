@@ -11,6 +11,7 @@ module.exports.CreatChannel = () => {
       console.log(error0)
       throw error0
     }
+    console.log('succesfull connection with rabbitMq server')
     connection.createChannel(function (error1, channel) {
       module.exports.channel = channel
       // consume messages part

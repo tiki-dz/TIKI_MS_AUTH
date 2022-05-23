@@ -29,14 +29,9 @@ app.use('/api', indexRouter)
 // sequelize.query('SET FOREIGN_KEY_CHECKS = 0').then(function () {
 //   sequelize.sync({ force: false, alter: true })
 // })
-
-// amqplib.connect(MESSAGE_BROKER_URL).then((connection) => {
-//   const channel = connection.createChannel()
-//   console.log(channel)
-// }).catch((err) => {
-//   console.log(err)
+// sequelize.query('SET FOREIGN_KEY_CHECKS = 0').then(function () {
+//   sequelize.sync({ alter: true })
 // })
-
 test.CreatChannel()
 app.listen(5001)
 module.exports = app
