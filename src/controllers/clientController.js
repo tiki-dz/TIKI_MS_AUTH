@@ -321,10 +321,7 @@ function sendClientActivationEmail (email, code) {
   })
   const transporter = nodemailer.createTransport({
 
-    host: 'smtp.mail.yahoo.com',
-    port: 465,
-    service: 'yahoo',
-    secure: false,
+    service: 'gmail',
     auth: {
       user: process.env.TIKI_EMAIL,
       pass: process.env.TIKI_PASSWORD
