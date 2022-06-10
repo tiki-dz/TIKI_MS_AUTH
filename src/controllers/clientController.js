@@ -291,13 +291,13 @@ function signup (req, res, next) {
                 sendClientActivationEmail(req.body.email, codeSended)
                 return res.status(200).json({
                   data: {
-                    token: token,
+                    token: token
                   },
                   success: true,
                   message:
-                    "User created successfuly Please check your email to activate your account",
-                  code: codeSended.toString(),
-                });
+                    'User created successfuly Please check your email to activate your account',
+                  code: codeSended.toString()
+                })
               })
             })
           })
@@ -321,15 +321,15 @@ function sendClientActivationEmail (email, code) {
   })
   const transporter = nodemailer.createTransport({
 
-    host: "smtp.mail.yahoo.com",
+    host: 'smtp.mail.yahoo.com',
     port: 465,
-    service: "yahoo",
+    service: 'yahoo',
     secure: false,
     auth: {
       user: process.env.TIKI_EMAIL,
-      pass: process.env.TIKI_PASSWORD,
-    },
-  });
+      pass: process.env.TIKI_PASSWORD
+    }
+  })
   // adding mailOptions
   const mailOptions = {
     user: process.env.TIKI_EMAIL,
@@ -424,12 +424,12 @@ function resendVerficationCode (req, res) {
           sendClientActivationEmail(req.body.email, codeSended)
           return res.status(200).json({
             data: {
-              token: token,
+              token: token
             },
             success: true,
             code: codeSended.toString(),
-            message: "code resended successfully",
-          });
+            message: 'code resended successfully'
+          })
         })
       })
     })

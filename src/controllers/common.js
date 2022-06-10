@@ -149,12 +149,12 @@ function forgetPasswordVerifyAccount (req, res, next) {
         sendClientActivationEmail(req.body.email, codeSended)
         return res.status(200).json({
           data: {
-            token: token,
+            token: token
           },
           success: true,
-          message: "verify your email ",
-          code: codeSended.toString(),
-        });
+          message: 'verify your email',
+          code: codeSended.toString()
+        })
       })
       // eslint-disable-next-line node/handle-callback-err
     })

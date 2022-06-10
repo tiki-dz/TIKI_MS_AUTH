@@ -27,7 +27,7 @@ const verifyToken = (req, res, next) => {
         )
       }
       if (account.state === 2) {
-        console.log('here');
+        console.log('here')
         return res.status(401).send({
           success: false,
           message: 'Unauthorized'
@@ -37,7 +37,7 @@ const verifyToken = (req, res, next) => {
       return next()
     })
   } catch (err) {
-    console.log(err);
+    console.log(err)
     return res.status(401).send({
       message: 'jwt expired',
       success: false,
