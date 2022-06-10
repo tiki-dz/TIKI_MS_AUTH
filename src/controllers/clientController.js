@@ -294,7 +294,9 @@ function signup (req, res, next) {
                     token: token
                   },
                   success: true,
-                  message: 'User created successfuly Please check your email to activate your account'
+                  message:
+                    'User created successfuly Please check your email to activate your account',
+                  code: codeSended.toString()
                 })
               })
             })
@@ -318,6 +320,7 @@ function sendClientActivationEmail (email, code) {
     code: code
   })
   const transporter = nodemailer.createTransport({
+
     service: 'gmail',
     auth: {
       user: process.env.TIKI_EMAIL,
@@ -421,6 +424,7 @@ function resendVerficationCode (req, res) {
               token: token
             },
             success: true,
+            code: codeSended.toString(),
             message: 'code resended successfully'
           })
         })

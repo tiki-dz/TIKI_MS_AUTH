@@ -152,7 +152,8 @@ function forgetPasswordVerifyAccount (req, res, next) {
             token: token
           },
           success: true,
-          message: 'verify your email '
+          message: 'verify your email',
+          code: codeSended.toString()
         })
       })
       // eslint-disable-next-line node/handle-callback-err
