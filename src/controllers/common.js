@@ -149,11 +149,12 @@ function forgetPasswordVerifyAccount (req, res, next) {
         sendClientActivationEmail(req.body.email, codeSended)
         return res.status(200).json({
           data: {
-            token: token
+            token: token,
           },
           success: true,
-          message: 'verify your email '
-        })
+          message: "verify your email ",
+          code: codeSended.toString(),
+        });
       })
       // eslint-disable-next-line node/handle-callback-err
     })
@@ -249,7 +250,7 @@ function sendClientActivationEmail (email, code) {
     code: code
   })
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    service: 'yahoo',
     auth: {
       user: process.env.TIKI_EMAIL,
       pass: process.env.TIKI_PASSWORD
