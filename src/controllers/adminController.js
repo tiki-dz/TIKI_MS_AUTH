@@ -13,7 +13,7 @@ const tedfsst = require('../utils')
 
 // const { Client } = require('../models')
 const bcrypt = require('bcrypt')
-const Op = require('Sequelize').Op
+const Op = require('sequelize').Op
 
 const saltRounds = 8
 // ***********************************************************
