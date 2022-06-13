@@ -28,13 +28,13 @@ exports.validate = (method) => {
     case 'activate': {
       return [
         body('state', 'Invalid state').isIn([1]),
-        body('email', 'Id must be a number').isEmail()
+        body('email', 'Invalid email').isEmail()
       ]
     }
     case 'deactivate': {
       return [
         body('state', 'Invalid state').isIn([2]),
-        body('email', 'Id must be a number').isEmail()
+        body('email', 'Invalid email').isEmail()
       ]
     }
     case 'notification': {

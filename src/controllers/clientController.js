@@ -5,6 +5,7 @@ const { Account, Notification, NotificationAll } = require('../models')
 const rabbitMq = require('../utils')
 const { STATISTIC_BINDING_KEY } = require('../config/config.js')
 
+const upload = require('../utils/upload')
 // const { Client } = require('../models')
 const fs = require('fs')
 const nodemailer = require('nodemailer')
@@ -512,6 +513,9 @@ async function updateClientByToken (req, res) {
 }
 // updating profil image client with id
 async function updateimage (req, res) {
+  if (!req.files) {
+    return res.json('welou')
+  }
   // check the authentification token
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
@@ -521,24 +525,23 @@ async function updateimage (req, res) {
   try {
     const token = req.headers['x-access-token']
     const decodedToken = jwt.verify(token, config.JWT_AUTH_KEY)
-    const imgUrl = req.file.filename.toString()
     const user = await User.findOne({
       where: {
         AccountEmail: decodedToken.email
       }
     })
+
+    upload(req.files.updateimage.data).then((urlImage) => {
+      user.profilePicture = urlImage
+      user.save()
+      res.status(200).send({
+        url: user.profilePicture,
+        success: true,
+        message: 'Image saved successfuly'
+      })
+    })
     // test the default image and deleting the the previous one
-    if (user.profilePicture !== (process.env.UPLOAD_URL + 'ProfileImage/user-default.jpg-1648754555891.jpg')) {
-      const filePath = user.profilePicture.replace(process.env.UPLOAD_URL, '')
-      if (user.profilePicture !== null) {
-        console.log(filePath)
-        fs.unlinkSync('./Upload/' + filePath)
-      }
-    }
     // updating the url in the database
-    user.profilePicture = process.env.UPLOAD_URL + 'ProfileImage/' + imgUrl
-    user.save()
-    res.status(200).send({ url: user.profilePicture, success: true, message: 'Image saved successfuly' })
   } catch (error) {
     console.log(error)
     res.status(500).send({ errors: error.message, success: false, message: 'processing err' })

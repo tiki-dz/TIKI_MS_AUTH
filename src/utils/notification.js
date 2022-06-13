@@ -32,7 +32,6 @@ function sendNotifToTopic (req, res, topic) {
     }
   }, notificationOptions)
     .then(response => {
-      console.log(response)
       res.status(200).send({ message: 'notification sended successfully', data: req.body, success: true })
     })
     // eslint-disable-next-line node/handle-callback-err
