@@ -6,7 +6,8 @@ exports.validate = (method) => {
     case 'login': {
       return [
         body('email', 'Invalid email format').isEmail(),
-        body('password', 'Invalid value min length 8').isLength({ min: 8 })
+        body('password', 'Invalid value min length 8').isLength({ min: 8 }),
+        body('fcm_token').isLength({ min: 1 })
       ]
     }
     case 'forgetPasswordSendVerificationAccount' : {

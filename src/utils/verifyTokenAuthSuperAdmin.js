@@ -21,9 +21,10 @@ const verifyToken = (req, res, next) => {
       }
     }).then((account) => {
       if (!account) {
-        return res.status(404).send({
+        return res.status(401).send({
+          errors: ['Unauthorized'],
           success: false,
-          message: 'account d"ont exist'
+          message: 'Unauthorized'
         }
         )
       }

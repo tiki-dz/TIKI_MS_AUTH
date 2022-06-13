@@ -1,10 +1,20 @@
 require('dotenv').config()
 const { validationResult } = require('express-validator/check')
-const { Account, User, Administrator } = require('../models')
+const { Account, User, Administrator, FaqCategorie, Faq } = require('../models')
 const jwt = require('jsonwebtoken')
-const { Client } = require('../models')
-const Promise = require('bluebird')
-const bcrypt = Promise.promisifyAll(require('bcrypt-nodejs'))
+
+// const Promise = require('bluebird')
+// const bcrypt = Promise.promisifyAll(require('bcrypt-nodejs'))
+
+const { Client, Notification, NotificationAll } = require('../models')
+
+const { sendNotifToOneUser, sendNotifToTopic } = require('../utils/notification')
+const tedfsst = require('../utils')
+
+// const { Client } = require('../models')
+const bcrypt = require('bcrypt')
+const Op = require('Sequelize').Op
+
 const saltRounds = 8
 // ***********************************************************
 const getPagingData = (data, page, limit) => {
@@ -86,11 +96,13 @@ function signup (req, res) {
       message: 'invalid data'
     })
   } try {
+    console.log('dkhalna  hna')
     Account.findOne({
       where: {
         email: req.body.email
       }
     }).then(function (account) {
+      console.log('dkhalna  hna2')
       if (account != null) {
         return res.status(409).json({
           success: false,
@@ -98,52 +110,63 @@ function signup (req, res) {
           errors: ['account already exist']
         })
       } else {
-        bcrypt.hash(req.body.password, 10, function (err, hash) {
-          if (err) {
-            return res.status(500).json({
-              success: false,
-              message: 'internal server error',
-              errors: ['internal server error']
-            })
-          }
-          Account.create({
-            email: req.body.email,
-            password: hash,
-            state: 1
-          }).then((account, err) => {
+        console.log('dkhalna  hna3')
+        try {
+          bcrypt.hash(req.body.password, 10, function (err, hash) {
+            console.log('dkhalna  hna4')
             console.log(err)
             if (err) {
-              // Account.destroy({ where: { email: req.body.email } })
               return res.status(500).json({
                 success: false,
                 message: 'internal server error',
                 errors: ['internal server error']
               })
             }
-            User.create({
-              AccountEmail: req.body.email,
-              firstName: req.body.firstName,
-              lastName: req.body.lastName,
-              birthDate: req.body.birthDate,
-              profilePicture: (process.env.UPLOAD_URL + 'ProfileImage/user-default.jpg-1648754555891.jpg'),
-              type: 'admin',
-              city: req.body.city,
-              sexe: req.body.sexe === 'Homme' ? 1 : 0,
-              phoneNumber: req.body.phoneNumber
-            }).then((user) => {
-              Administrator.create({
-                role: 'admin',
-                UserIdUser: user.idUser
-              }).then((account) => {
-                return res.status(200).json({
-                  data: null,
-                  success: true,
-                  message: 'Admin created successfuly'
+            Account.create({
+              email: req.body.email,
+              password: hash,
+              state: 1
+            }).then((account, err) => {
+              console.log('here')
+              console.log(err)
+              if (err) {
+              // Account.destroy({ where: { email: req.body.email } })
+                return res.status(500).json({
+                  success: false,
+                  message: 'internal server error',
+                  errors: ['internal server error']
+                })
+              }
+              User.create({
+                AccountEmail: req.body.email,
+                firstName: req.body.firstName,
+                lastName: req.body.lastName,
+                birthDate: req.body.birthDate,
+                profilePicture: (process.env.UPLOAD_URL + 'ProfileImage/user-default.jpg-1648754555891.jpg'),
+                type: 'admin',
+                city: req.body.city,
+                sexe: req.body.sexe === 'Homme' ? 1 : 0,
+                phoneNumber: req.body.phoneNumber
+              }).then((user) => {
+                Administrator.create({
+                  role: 'admin',
+                  UserIdUser: user.idUser
+                }).then((account) => {
+                  return res.status(200).json({
+                    data: null,
+                    success: true,
+                    message: 'Admin created successfuly'
+                  })
                 })
               })
             })
           })
-        })
+        } catch (err) {
+          return res.status(500).json({
+            success: false,
+            errors: [err]
+          })
+        }
       }
     })
   } catch (err) {
@@ -285,24 +308,15 @@ async function findClientById (req, res) {
 }
 // activate client by id
 async function activateClient (req, res) {
-  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  const errors = validationResult(req)
+  console.log(errors) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
     return res.status(422).json({ errors: errors.array() })
   } try {
-    const id = parseInt(req.params.id)
-    const client = await Client.findOne({
-      where: {
-        idClient: id
-      }
-    })
-    const user = await User.findOne({
-      where: {
-        idUser: client.dataValues.UserIdUser
-      }
-    })
+    const email = req.body.email
     const account = await Account.findOne({
       where: {
-        email: user.dataValues.AccountEmail
+        email: email
       }
     })
     let message = 'Account activated successfuly'
@@ -325,23 +339,15 @@ async function activateClient (req, res) {
 // deactivate client by id
 async function deactivateClient (req, res) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  console.log(errors)
   if (!errors.isEmpty()) {
     return res.status(422).json({ errors: errors.array() })
   } try {
-    const id = parseInt(req.params.id)
-    const client = await Client.findOne({
-      where: {
-        idClient: id
-      }
-    })
-    const user = await User.findOne({
-      where: {
-        idUser: client.dataValues.UserIdUser
-      }
-    })
+    const email = req.body.email
+
     const account = await Account.findOne({
       where: {
-        email: user.dataValues.AccountEmail
+        email: email
       }
     })
     let message = 'Account Deactivated successfuly'
@@ -352,12 +358,12 @@ async function deactivateClient (req, res) {
     } else {
       message = 'already deactivated user!'
     }
-
     return res.status(200).json({
       success: true,
       message: message
     })
   } catch (error) {
+    console.log(error)
     return res.status(500).json({
       success: false,
       message: 'error',
@@ -431,5 +437,221 @@ async function addAdmin (req, res) {
 
 // if data is validated add in database;
 }
+async function getAccounts (req, res) {
+  const { page, size, search, filter } = req.query
+  let condition = null
+  if (filter && search) {
+    condition = { [Op.and]: [{ [Op.or]: [{ firstName: { [Op.like]: `%${search}%` } }, { lastName: { [Op.like]: `%${search}%` } }, { AccountEmail: { [Op.like]: `%${search}%` } }] }, { type: { [Op.eq]: filter } }] }
+  } else if (filter) {
+    condition = { type: { [Op.eq]: filter } }
+  } else if (search) {
+    condition = { [Op.or]: [{ firstName: { [Op.like]: `%${search}%` } }, { lastName: { [Op.like]: `%${search}%` } }, { AccountEmail: { [Op.like]: `%${search}%` } }] }
+  }
+  const { limit, offset } = getPagination(page, size)
+  console.log(limit, offset)
+  const total = await Account.count({
+    limit: limit,
+    offset: offset,
+    include: [{
+      model: User,
+      required: true,
+      where: condition
+    }]
+  })
+  Account.findAndCountAll({
+    limit,
+    offset,
+    include: [{
+      model: User,
+      required: true,
+      where: condition
+    }]
+  })
+    .then(data => {
+      data.count = total
+      const response = getPagingData(data, page, limit)
+      res.send({ ...response, success: true })
+    })
+}
+async function sendNotification (req, res, next) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  try {
+    Account.findOne({
+      where: {
+        email: req.body.email
+      },
+      include: [
+        { model: User }
+      ]
+    }).then((user) => {
+      console.log(user.User)
+      Notification.create({
+        title: req.body.title,
+        body: req.body.body,
+        UserIdUser: user.User.idUser
+      }).then((notif) => {
+        if (!user.User.notificationToken) {
+          return res.status(200).send({ message: 'notification sended successfully just to the collection', data: req.body, success: true })
+        }
+        sendNotifToOneUser(req, res, user.User.notificationToken)
+      })
+    })
+  } catch (error) {
+  }
+}
+async function sendNotificationAll (req, res, next) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  try {
+    NotificationAll.create({
+      title: req.body.title,
+      body: req.body.body
+    }).then((notfs) => {
+      console.log(notfs)
+      sendNotifToTopic(req, res, req.body.topic)
+    })
+  } catch (error) {
+  }
+}
+function scheduledNotification (req, res) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  Account.findOne({
+    where: {
+      email: req.body.email
+    },
+    include: [
+      { model: User }
+    ]
+  }).then((user) => {
+    scheduleMessageForOneUser(req.body.date, req.body.hour, {
+      title: req.body.title,
+      body: req.body.body
+    }, user.User.notificationToken)
+  })
+}
+function addFaqCategorie (req, res) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  FaqCategorie.create({
+    nom: req.body.name
+  }).then((faqCategorie) => {
+    return res.status(200).json({ success: true, data: faqCategorie, message: 'success' })
+  })
+}
+function deleteFaqCategorie (req, res) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  FaqCategorie.destroy({
+    where: {
+      idFaqCategorie: req.params.id
+    }
+  }).then((faqCategorie) => {
+    return res.status(200).json({ success: true, data: faqCategorie, message: 'success' })
+  })
+}
+function getFaqCategorie (req, res) {
+  FaqCategorie.findAll({
+  }).then((faqCategorie) => {
+    return res.status(200).json({ success: true, data: faqCategorie, message: 'success' })
+  })
+}
 
-module.exports = { login, signup, profile, addClient, findAllClients, findClientById, deactivateClient, activateClient, addAdmin }
+const Queue = require('bull')
+const notificationQueue = new Queue('NotificationBull', 'redis://127.0.0.1:6379')
+console.log(notificationQueue)
+async function scheduleMessageForOneUser (date, token) {
+
+}
+async function addFaq (req, res, next) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  FaqCategorie.findOne({
+    where: {
+      idFaqCategorie: req.body.id
+    }
+  }).then((data) => {
+    if (!data) {
+      return res.status(404).json({ errors: errors.array(), success: false, message: 'categoryFaqNotFound' })
+    } else {
+      Faq.create({
+        Question: req.body.question,
+        Reponse: req.body.reponse,
+        FaqCategorieIdFaqCategorie: req.body.id
+      }).then((faq) => {
+        return res.status(200).json({ data: faq, success: true, message: 'added successfully' })
+      })
+    }
+  })
+}
+function deleteFaq (req, res) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  Faq.destroy({
+    where: {
+      idFaq: req.params.id
+    }
+  }).then((faq) => {
+    return res.status(200).json({ success: true, data: faq, message: 'success' })
+  })
+}
+function patchFaq (req, res) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  Faq.findOne({ where: { idFaq: req.params.id } }).then((faq) => {
+    if (!faq) {
+      return res.status(404).json({ errors: errors.array(), success: false, message: 'faq not found' })
+    }
+    faq.Question = req.body.question ?? faq.Question
+    faq.Reponse = req.body.reponse ?? faq.Reponse
+    faq.save().then((faq) => {
+      return res.status(200).json({ success: true, data: faq, message: 'success' })
+    })
+  })
+}
+function patchFaqCategorie (req, res) {
+  const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
+  }
+  FaqCategorie.findOne({ where: { idFaqCategorie: req.params.id } }).then((faqCategorie) => {
+    if (!faqCategorie) {
+      return res.status(404).json({ errors: errors.array(), success: false, message: 'faq not found' })
+    }
+    faqCategorie.nom = req.body.nom ?? faqCategorie.nom
+    faqCategorie.save().then((faq) => {
+      return res.status(200).json({ success: true, data: faq, message: 'success' })
+    })
+  })
+}
+
+function testingRabbitmq (req, res) {
+  try {
+    const channel = tedfsst.channel
+    const payload = { token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImEuaGFyaXJpQGVzaS1zYmEuZHoiLCJpYXQiOjE2NTMzMDg5NzEsImV4cCI6MTY1NTkwMDk3MX0.0JTsh8CtuC2eX6lTWj6jD7TeGs0RJ9kBzQQOijNsb4c', score: 5 }
+    const message = [{ event: 'ADD-SCORE', payload: payload }]
+    tedfsst.PublishMessage(channel, 'AUTH_SERVICE', message)
+    res.status(200).send('succes')
+  } catch (error) {
+    res.send(error)
+  }
+}
+
+module.exports = { login, getAccounts, signup, profile, addClient, findAllClients, findClientById, deactivateClient, activateClient, addAdmin, sendNotification, sendNotificationAll, scheduledNotification, addFaqCategorie, deleteFaqCategorie, getFaqCategorie, addFaq, deleteFaq, patchFaq, patchFaqCategorie, testingRabbitmq }

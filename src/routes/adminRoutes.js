@@ -6,10 +6,10 @@ const validationClient = require('../validation/clientValidation')
 const verifyToken = require('../utils/verifyTokenAuthAdmin')
 const verifyTokenAuthSuperAdmin = require('../utils/verifyTokenAuthSuperAdmin')
 
-router.post('/signup', validationClient.validate('signup'), verifyTokenAuthSuperAdmin, adminController.signup)
+router.post('/signup', verifyTokenAuthSuperAdmin, validationClient.validate('signup'), adminController.signup)
 router.post('/login', validationClient.validate('login'), adminController.login)
 router.get('/profile', verifyToken, adminController.profile)
-
+router.get('/accounts', verifyToken, adminController.getAccounts)
 // *************************************************************************
 
 // get all clients
@@ -22,11 +22,23 @@ router.post('/client', validationAdministrator.validate('addClient'), verifyToke
 // *************************************************************************
 
 // activate client
-router.put('/client/:id/activate', validationAdministrator.validate('activate'), verifyToken, adminController.activateClient)
+router.put('/client/activate', validationAdministrator.validate('activate'), verifyToken, adminController.activateClient)
 // deactivate client
-router.put('/client/:id/deactivate', validationAdministrator.validate('deactivate'), verifyToken, adminController.deactivateClient)
+router.put('/client/deactivate', validationAdministrator.validate('deactivate'), verifyToken, adminController.deactivateClient)
 
 // add new admin
 router.post('/admin', validationAdministrator.validate('addClient'), verifyToken, adminController.addAdmin)
+router.post('/notification', validationAdministrator.validate('notification'), verifyToken, adminController.sendNotification)
+router.post('/notificationAll', validationAdministrator.validate('notificationAll'), verifyToken, adminController.sendNotificationAll)
+router.post('/notification/scheduled', validationAdministrator.validate('notificationSh'), verifyToken, adminController.scheduledNotification)
+router.post('/faqCategorie', validationAdministrator.validate('faqCategorie'), verifyToken, adminController.addFaqCategorie)
+router.delete('/faqCategorie/:id', validationAdministrator.validate('deletefaqCategorie'), verifyToken, adminController.deleteFaqCategorie)
+router.get('/faqCategorie', adminController.getFaqCategorie)
+router.post('/faq', verifyToken, validationAdministrator.validate('addFaq'), adminController.addFaq)
+router.delete('/faq/:id', verifyToken, validationAdministrator.validate('deletefaqCategorie'), adminController.deleteFaq)
+router.patch('/faq/:id', verifyToken, validationAdministrator.validate('patchFaq'), adminController.patchFaq)
+router.patch('/faqCategorie/:id', verifyToken, validationAdministrator.validate('patchFaq'), adminController.patchFaqCategorie)
+// for testing purposes only
+router.post('/testingRabbitmq', adminController.testingRabbitmq)
 
 module.exports = router

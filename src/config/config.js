@@ -6,5 +6,11 @@ module.exports = {
     dialect: 'mysql',
     host: 'tiki.mysql.database.azure.com',
     port: 3306
-  }
+  },
+  MESSAGE_BROKER_URL: process.env.MESSAGE_BROKER_URL,
+  EXCHANGE_NAME: 'PLASTI_ONLINE',
+  AUTH_BINDING_KEY: 'AUTH_SERVICE',
+  CATEGORY_EVENT_BINDING_KEY: 'CATEGORY_EVENT_SERVICE',
+  PAYMENT_BINDING_KEY: 'PAYMENT_SERVICE',
+  STATISTIC_BINDING_KEY: 'STATISTIC_SERVICE'
 }
