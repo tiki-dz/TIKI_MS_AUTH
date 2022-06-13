@@ -6,6 +6,8 @@ const cookieParser = require('cookie-parser')
 const logger = require('morgan')
 const indexRouter = require('./routes/indexRoutes')
 const rabbitMq = require('./utils')
+const eurekaHelper = require('./eurekaHelper/eurekaHelper.js')
+
 // const { MESSAGE_BROKER_URL } = require('./config/config.js')
 // const usersRouter = require("./routes/users");
 // const Account = require("./models/Account");
@@ -33,6 +35,8 @@ app.use('/api', indexRouter)
 //   sequelize.sync({ alter: true })
 // })
 rabbitMq.CreatChannel()
-app.listen(5001)
+console.log('PORT', process.env.PORT)
+app.listen(process.env.PORT)
+eurekaHelper.registerWithEureka('service-auth', process.env.PORT)
 module.exports = app
 console.log('server start on port 5001')
