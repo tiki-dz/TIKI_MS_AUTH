@@ -18,6 +18,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(45),
       allowNull: false
     },
+    // TODO badalha l integer ala jal id ta3 city
     city: {
       type: DataTypes.STRING(45)
     },

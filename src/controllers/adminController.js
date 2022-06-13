@@ -13,7 +13,9 @@ const tedfsst = require('../utils')
 
 // const { Client } = require('../models')
 const bcrypt = require('bcrypt')
-const Op = require('sequelize').Op
+const Op = require('Sequelize').Op
+const rabbitMq = require('../utils')
+const { STATISTIC_BINDING_KEY } = require('../config/config.js')
 
 const saltRounds = 8
 // ***********************************************************
@@ -152,6 +154,11 @@ function signup (req, res) {
                   role: 'admin',
                   UserIdUser: user.idUser
                 }).then((account) => {
+                  // send event to rabbitMq
+                  const channel = rabbitMq.channel
+                  const payload = { city: req.body.city }
+                  const message = [{ event: 'ADD-TO-CITY', payload: payload }]
+                  rabbitMq.PublishMessage(channel, STATISTIC_BINDING_KEY, message)
                   return res.status(200).json({
                     data: null,
                     success: true,
@@ -250,6 +257,11 @@ async function addClient (req, res) {
               const newClient = await Client.create({
                 UserIdUser: newUser.dataValues.idUser
               })
+              // send event to rabbitMq
+              const channel = rabbitMq.channel
+              const payload = { city: userToAdd.city }
+              const message = [{ event: 'ADD-TO-CITY', payload: payload }]
+              rabbitMq.PublishMessage(channel, STATISTIC_BINDING_KEY, message)
               console.log('new user ID:', newUser, newClient)
               return res.status(200).send({ data: newUser.toJSON(), success: true, message: 'the client has been added' })
             }
@@ -422,6 +434,11 @@ async function addAdmin (req, res) {
                 role: 'admin',
                 UserIdUser: newUser.dataValues.idUser
               })
+              // send event to rabbitMq
+              const channel = rabbitMq.channel
+              const payload = { city: userToAdd.city }
+              const message = [{ event: 'ADD-TO-CITY', payload: payload }]
+              rabbitMq.PublishMessage(channel, STATISTIC_BINDING_KEY, message)
               console.log('new user ID:', newUser, newAdmin)
               return res.status(200).send({ data: newUser.toJSON(), success: true, message: 'the client has been added' })
             }
