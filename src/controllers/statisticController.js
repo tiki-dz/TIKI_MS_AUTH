@@ -18,7 +18,7 @@ async function update (req, res) {
           model: Account,
           attributes: [],
           where: {
-            state: 0
+            state: 2
           }
         }
       ]
