@@ -2,6 +2,8 @@ require('dotenv').config()
 const { validationResult } = require('express-validator/check')
 const { User, UserClientInvalid, Client, Faq, FaqCategorie } = require('../models')
 const { Account, Notification, NotificationAll } = require('../models')
+const rabbitMq = require('../utils')
+const { STATISTIC_BINDING_KEY } = require('../config/config.js')
 
 // const { Client } = require('../models')
 const fs = require('fs')
@@ -289,6 +291,11 @@ function signup (req, res, next) {
                   expiresIn: '300s'
                 })
                 sendClientActivationEmail(req.body.email, codeSended)
+                // send event to rabbitMq
+                const channel = rabbitMq.channel
+                const payload = { city: req.body.city }
+                const message = [{ event: 'ADD-TO-CITY', payload: payload }]
+                rabbitMq.PublishMessage(channel, STATISTIC_BINDING_KEY, message)
                 return res.status(200).json({
                   data: {
                     token: token
@@ -477,6 +484,7 @@ async function updateClientByToken (req, res) {
         AccountEmail: decodedToken.email
       }
     })
+    const oldCity = userToUpdate.city
     userToUpdate.firstName = data.firstName == null ? userToUpdate.firstName : data.firstName
     userToUpdate.lastName = data.lastName == null ? userToUpdate.lastName : data.lastName
     userToUpdate.city = data.city == null ? userToUpdate.city : data.city
@@ -486,6 +494,15 @@ async function updateClientByToken (req, res) {
       userToUpdate.sexe = data.sexe === 'Homme' ? 1 : 0
     }
     await userToUpdate.save()
+    if (oldCity !== userToUpdate.city) {
+      // send event to rabbitMq
+      const channel = rabbitMq.channel
+      const payload = { city: userToUpdate.city }
+      const message = [{ event: 'ADD-TO-CITY', payload: payload }]
+      rabbitMq.PublishMessage(channel, STATISTIC_BINDING_KEY, message)
+      // send event to rabbitMq
+      rabbitMq.PublishMessage(channel, STATISTIC_BINDING_KEY, [{ event: 'REMOVE-FROM-CITY', payload: { city: oldCity } }])
+    }
     console.log('user id= ' + userToUpdate.idUser + ' has been updated')
     return res.status(200).send({ data: { User: userToUpdate.toJSON() }, success: true, message: 'the client has been updated' })
   } catch (error) {
