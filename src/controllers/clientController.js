@@ -240,6 +240,7 @@ function verifyCode (req, res) {
 function signup (req, res, next) {
   // check id data is validated
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
+  console.log(errors)
   if (!errors.isEmpty()) {
     res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
     return
@@ -479,6 +480,9 @@ async function updateClientByToken (req, res) {
     userToUpdate.city = data.city == null ? userToUpdate.city : data.city
     userToUpdate.phoneNumber = data.phoneNumber == null ? userToUpdate.phoneNumber : data.phoneNumber
     userToUpdate.birthDate = data.birthDate == null ? userToUpdate.birthDate : data.birthDate
+    if (data.sexe !== null) {
+      userToUpdate.sexe = data.sexe === 'Homme' ? 1 : 0
+    }
     await userToUpdate.save()
     console.log('user id= ' + userToUpdate.idUser + ' has been updated')
     return res.status(200).send({ data: { User: userToUpdate.toJSON() }, success: true, message: 'the client has been updated' })
