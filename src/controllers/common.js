@@ -144,7 +144,7 @@ function forgetPasswordVerifyAccount (req, res, next) {
       // eslint-disable-next-line node/handle-callback-err
       bcrypt.hash(codeSended.toString(), 10, function (err, hash) {
         const token = jwt.sign({ email: req.body.email, code: hash }, process.env.JWT_FORGET_CONFIRMPIN, {
-          expiresIn: 600000
+          expiresIn: '3d'
         })
         sendClientActivationEmail(req.body.email, codeSended)
         return res.status(200).json({
@@ -183,7 +183,7 @@ function forgetPasswordValidateAccount (req, res, next) {
         })
       }
       const token = jwt.sign({ email: req.body.email }, process.env.JWT_FORGET_CONFIRMPASSWORD, {
-        expiresIn: 600000
+        expiresIn: '3d'
       })
       return res.status(200).json({
         data: {
