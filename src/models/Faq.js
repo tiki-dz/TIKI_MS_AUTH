@@ -2,17 +2,21 @@
 const { User } = require('./User')
 
 module.exports = (sequelize, DataTypes) => {
-  const client = sequelize.define(
-    'Client',
+  const faq = sequelize.define(
+    'Faq',
     {
-      idClient: {
+      idFaq: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true
       },
-      score: {
-        type: DataTypes.INTEGER,
-        allowNull: true
+      Question: {
+        type: DataTypes.TEXT,
+        allowNull: false
+      },
+      Reponse: {
+        type: DataTypes.TEXT,
+        allowNull: false
       }
       // idUser: {
       //   type: DataTypes.INTEGER,
@@ -29,8 +33,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       classMethods: {
         associate: function (models) {
-          client.belongsTo(models.User)
-          console.log('Client belongs to User!')
+          faq.belongsTo(models.FaqCategorie)
         }
       }
     }
@@ -38,5 +41,5 @@ module.exports = (sequelize, DataTypes) => {
   // client.associate = (models) => {
 
   // };
-  return client
+  return faq
 }

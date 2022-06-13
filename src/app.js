@@ -4,8 +4,9 @@ const express = require('express')
 const path = require('path')
 const cookieParser = require('cookie-parser')
 const logger = require('morgan')
-
 const indexRouter = require('./routes/indexRoutes')
+const rabbitMq = require('./utils')
+// const { MESSAGE_BROKER_URL } = require('./config/config.js')
 // const usersRouter = require("./routes/users");
 // const Account = require("./models/Account");
 // const User = require("./models/User");
@@ -28,6 +29,10 @@ app.use('/api', indexRouter)
 // sequelize.query('SET FOREIGN_KEY_CHECKS = 0').then(function () {
 //   sequelize.sync({ force: false, alter: true })
 // })
+// sequelize.query('SET FOREIGN_KEY_CHECKS = 0').then(function () {
+//   sequelize.sync({ alter: true })
+// })
+rabbitMq.CreatChannel()
 app.listen(5001)
 module.exports = app
 console.log('server start on port 5001')

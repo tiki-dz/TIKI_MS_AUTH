@@ -28,5 +28,17 @@ router.put('/client/deactivate', validationAdministrator.validate('deactivate'),
 
 // add new admin
 router.post('/admin', validationAdministrator.validate('addClient'), verifyToken, adminController.addAdmin)
+router.post('/notification', validationAdministrator.validate('notification'), verifyToken, adminController.sendNotification)
+router.post('/notificationAll', validationAdministrator.validate('notificationAll'), verifyToken, adminController.sendNotificationAll)
+router.post('/notification/scheduled', validationAdministrator.validate('notificationSh'), verifyToken, adminController.scheduledNotification)
+router.post('/faqCategorie', validationAdministrator.validate('faqCategorie'), verifyToken, adminController.addFaqCategorie)
+router.delete('/faqCategorie/:id', validationAdministrator.validate('deletefaqCategorie'), verifyToken, adminController.deleteFaqCategorie)
+router.get('/faqCategorie', adminController.getFaqCategorie)
+router.post('/faq', verifyToken, validationAdministrator.validate('addFaq'), adminController.addFaq)
+router.delete('/faq/:id', verifyToken, validationAdministrator.validate('deletefaqCategorie'), adminController.deleteFaq)
+router.patch('/faq/:id', verifyToken, validationAdministrator.validate('patchFaq'), adminController.patchFaq)
+router.patch('/faqCategorie/:id', verifyToken, validationAdministrator.validate('patchFaq'), adminController.patchFaqCategorie)
+// for testing purposes only
+router.post('/testingRabbitmq', adminController.testingRabbitmq)
 
 module.exports = router

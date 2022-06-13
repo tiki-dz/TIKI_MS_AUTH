@@ -1,4 +1,5 @@
 const { body } = require('express-validator/check')
+const { param } = require('express-validator/check')
 
 exports.validate = (method) => {
   switch (method) {
@@ -34,6 +35,51 @@ exports.validate = (method) => {
       return [
         body('state', 'Invalid state').isIn([2]),
         body('email', 'Invalid email').isEmail()
+      ]
+    }
+    case 'notification': {
+      return [
+        body('title', 'Invalid title').isLength({ min: 1 }),
+        body('body', 'Invalid body').isLength({ min: 1 }),
+        body('email', 'Id must be a number').isEmail()
+      ]
+    }
+    case 'notificationSh': {
+      return [
+        body('title', 'Invalid title').isLength({ min: 1 }),
+        body('body', 'Invalid body').isLength({ min: 1 }),
+        body('email', 'Id must be a number').isEmail(),
+        body('date').isLength({ min: 1 }),
+        body('hour').isLength({ min: 1 })
+      ]
+    }
+    case 'notificationAll': {
+      return [
+        body('title', 'Invalid title').isLength({ min: 1 }),
+        body('body', 'Invalid body').isLength({ min: 1 }),
+        body('topic', 'Invalid topic').isLength({ min: 1 })
+      ]
+    }
+    case 'faqCategorie': {
+      return [
+        body('name', 'Invalid title').isLength({ min: 1 })
+      ]
+    }
+    case 'deletefaqCategorie': {
+      return [
+        param('id', 'Invalid is').isNumeric()
+      ]
+    }
+    case 'addFaq': {
+      return [
+        body('id', 'Invalid is').isNumeric(),
+        body('question', 'Invalid question').isLength({ min: 1 }),
+        body('reponse', 'Invalid reponse').isLength({ min: 1 })
+      ]
+    }
+    case 'patchFaq': {
+      return [
+        param('id', 'Invalid is').isNumeric()
       ]
     }
   }
