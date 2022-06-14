@@ -1,4 +1,4 @@
-// const { sequelize } = require('./models')
+const { sequelize } = require('./models')
 // const createError = require("http-errors")
 const express = require('express')
 const path = require('path')
@@ -31,18 +31,19 @@ app.use(
 app.use('/api', indexRouter)
 
 // catch 404 and forward to error handler
-// sequelize.query('SET FOREIGN_KEY_CHECKS = 0').then(function () {
-//   sequelize.sync({ force: true })
-// })
+sequelize.query('SET FOREIGN_KEY_CHECKS = 0').then(function () {
+  sequelize.sync({ alter: true })
+})
 // sequelize.query('SET FOREIGN_KEY_CHECKS = 0').then(function () {
 //   sequelize.sync({ force: false, alter: true })
 // })
-// sequelize.query('SET FOREIGN_KEY_CHECKS = 0').then(function () {
-//   sequelize.sync({ alter: true })
-// })
-rabbitMq.CreatChannel()
+
 console.log('PORT', process.env.PORT)
+
 app.listen(process.env.PORT)
-eurekaHelper.registerWithEureka('service-auth', process.env.PORT)
 module.exports = app
+eurekaHelper.registerWithEureka('service-auth', process.env.PORT)
+
+rabbitMq.CreatChannel()
+
 console.log('server start on port 5001')

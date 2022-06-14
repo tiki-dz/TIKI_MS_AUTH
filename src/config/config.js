@@ -1,12 +1,19 @@
 module.exports = {
   db: {
-    database: 'tiki',
-    user: 'admintiki@tiki',
-    password: 'TIKITA3NAtest12.',
+    // database: 'tiki',
+    // user: 'admintiki@tiki',
+    // password: 'TIKITA3NAtest12.',
+    // dialect: 'mysql',
+    // host: 'tiki.mysql.database.azure.com',
+    // port: 3306
+    database: 'db_auth',
+    user: 'root',
+    password: 'root',
     dialect: 'mysql',
-    host: 'tiki.mysql.database.azure.com',
-    port: 3306
+    host: 'localhost',
+    port: 3308
   },
+
   MESSAGE_BROKER_URL: process.env.MESSAGE_BROKER_URL,
   EXCHANGE_NAME: 'PLASTI_ONLINE',
   AUTH_BINDING_KEY: 'AUTH_SERVICE',

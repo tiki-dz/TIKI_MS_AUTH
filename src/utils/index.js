@@ -1,12 +1,12 @@
 /* ----------------------- Message broker ----------------------- */
 
-const { MESSAGE_BROKER_URL, AUTH_BINDING_KEY } = require('../config/config.js')
+const { AUTH_BINDING_KEY } = require('../config/config.js')
 const amqp = require('amqplib/callback_api')
 const eventHendler = require('./eventsFunctions')
 // create a channel
 
 module.exports.CreatChannel = () => {
-  amqp.connect(MESSAGE_BROKER_URL, function (error0, connection) {
+  amqp.connect('amqps://ynowgtny:wzTk0kKludPNXPmdIhKxp5NoUWfA6GXt@rat.rmq2.cloudamqp.com/ynowgtny', function (error0, connection) {
     if (error0) {
       console.log(error0)
       throw error0
