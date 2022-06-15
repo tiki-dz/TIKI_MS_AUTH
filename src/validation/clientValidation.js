@@ -38,9 +38,7 @@ exports.validate = (method) => {
           .isLength({ min: 3 })
           .optional({ nullable: true }),
         body('city')
-          .matches(/^[A-Za-z\s]+$/)
-          .withMessage('city must be alphabetic.')
-          .isLength({ min: 3 })
+          .isLength({ min: 1 })
           .optional({ nullable: true }),
         body('phoneNumber', 'PhoneNumber Invalid value min and max length 10').isNumeric().isLength({ min: 10, max: 10 }).optional({ nullable: true }),
         body('sexe').isIn(['Homme', 'Femme']).optional({ nullable: true })
