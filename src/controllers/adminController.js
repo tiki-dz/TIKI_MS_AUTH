@@ -194,6 +194,9 @@ function profile (req, res) {
       where: {
         AccountEmail: decodedToken.email
       },
+      include: [
+        { model: Administrator }
+      ],
       attributes: ['firstName', 'profilePicture', 'lastName', 'city', 'phoneNumber', 'sexe', 'birthDate', 'AccountEmail']
     }).then(function (user) {
       return res.status(200).json({ data: user, success: true, message: 'success' })
