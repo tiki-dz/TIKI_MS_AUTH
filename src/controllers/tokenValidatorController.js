@@ -1,3 +1,4 @@
+/* eslint-disable dot-notation */
 require('dotenv').config()
 const { validationResult } = require('express-validator/check')
 const { User, Administrator, Client, Partner } = require('../models')
@@ -5,7 +6,8 @@ const jwt = require('jsonwebtoken')
 
 // adding one client
 async function TokenCheck (req, res) {
-// check id data is validated
+  console.log('tesst')
+  // check id data is validated
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
     res.status(422).json({ errors: errors.array(), success: false, message: 'invalid data' })
@@ -13,7 +15,8 @@ async function TokenCheck (req, res) {
   }
   try {
     const token = req.headers['x-access-token']
-    const tokenType = req.headers.role
+    console.log(token)
+    const tokenType = req.headers['role']
     console.log(tokenType)
     let decodedToken
     if (tokenType === 'admin') {
