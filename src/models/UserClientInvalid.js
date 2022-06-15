@@ -29,10 +29,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     phoneNumber: {
       type: DataTypes.INTEGER(10),
-      allowNull: true,
-      validate: {
-        len: [10, 10]
-      }
+      allowNull: true
     },
     notificationToken: {
       type: DataTypes.STRING(45)
