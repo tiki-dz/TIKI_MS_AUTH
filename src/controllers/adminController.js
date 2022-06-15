@@ -13,7 +13,7 @@ const tedfsst = require('../utils')
 
 // const { Client } = require('../models')
 const bcrypt = require('bcrypt')
-const Op = require('Sequelize').Op
+const Op = require('sequelize').Op
 const rabbitMq = require('../utils')
 const { STATISTIC_BINDING_KEY } = require('../config/config.js')
 
@@ -31,7 +31,6 @@ const getPagination = (page, size) => {
   return { limit, offset }
 }
 // ***********************************************************
-
 function login (req, res) {
   const errors = validationResult(req) // Finds the validation errors in this request and wraps them in an object with handy functions
   if (!errors.isEmpty()) {
@@ -207,7 +206,6 @@ function profile (req, res) {
     })
   }
 }
-
 // adding one client
 async function addClient (req, res) {
 // check id data is validated

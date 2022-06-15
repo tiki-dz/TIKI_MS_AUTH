@@ -28,7 +28,7 @@ router.delete('/', verifyTokenAuth, clientController.deleteClientByToken)
 // the max size of an image is 20Mo
 router.put('/updateimage', verifyTokenAuth, clientController.updateimage)
 router.get('/notification', verifyTokenAuth, clientController.getNotification)
-router.get('/notificationAll', verifyTokenAuth, clientController.getNotificationAll)
+router.get('/notificationAll', clientController.getNotificationAll)
 router.get('/faqs', verifyTokenAuth, clientController.getFaqFilterd)
 router.get('/faqsCategory', verifyTokenAuth, clientController.getFaqCategory)
 
