@@ -611,9 +611,11 @@ async function getNotification (req, res, next) {
       where: {
         UserIdUser: user.User.idUser
       },
+      order: [['createdAt', 'DESC']],
       limit,
       offset
     }).then((notifs) => {
+      console.log(notifs)
       const response = getPagingDataNotifcation(notifs, page, limit)
       return res.status(200).send({ data: response, success: true, message: 'notification get succes' })
     })
@@ -624,7 +626,8 @@ function getNotificationAll (req, res, next) {
   const { limit, offset } = getPaginationNotification(page, size)
   NotificationAll.findAndCountAll({
     limit,
-    offset
+    offset,
+    order: [['createdAt', 'DESC']]
   }).then((notifs) => {
     const response = getPagingDataNotifcation(notifs, page, limit)
     return res.status(200).send({ data: response, success: true, message: 'notification get succes' })

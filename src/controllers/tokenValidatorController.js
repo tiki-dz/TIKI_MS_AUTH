@@ -15,8 +15,9 @@ async function TokenCheck (req, res) {
   }
   try {
     const token = req.headers['x-access-token']
-    console.log(token)
+    console.log(token, 'token')
     const tokenType = req.headers['role']
+    console.log(tokenType)
     console.log(tokenType)
     let decodedToken
     if (tokenType === 'admin') {
@@ -69,6 +70,7 @@ async function TokenCheck (req, res) {
       res.status(400).send({ error: 'unknown user', success: false, message: 'processing err' })
     }
   } catch (e) {
+    console.log(e)
     res.status(500).send({ error: e, success: false, message: 'processing err' })
   }
 

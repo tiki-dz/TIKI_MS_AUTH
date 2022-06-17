@@ -65,7 +65,7 @@ function login (req, res) {
           res.status(403).json({ success: false, message: 'your account is desactivated', errors: ['your account is desactivated by admin'] })
         }
         const token = jwt.sign({ email: req.body.email }, process.env.JWT_AUTHADMIN_KEY, {
-          expiresIn: '30d'
+          expiresIn: '130d'
         })
         // delete sensitive data
         account.password = undefined
